@@ -1,6 +1,14 @@
 <template>
   <div class="container container-top">
     <b-container>
+      <h1>Nurseries</h1>
+      <b-list-group>
+        <b-list-group-item v-for="nursery in nurseries" v-bind:key="nursery.id" class="text-left">
+          <p>Name: {{ nursery.name }}</p>
+          <p>Latitude: {{ nursery.lat }}</p>
+          <p>Longitude: {{ nursery.long }}</p>
+        </b-list-group-item>
+      </b-list-group>
       <h1>Plant list</h1>
       <b-list-group>
         <b-list-group-item v-for="plant in plants" v-bind:key="plant.id" class="text-left">
@@ -12,7 +20,42 @@
           <p>Nursery: {{ plant.nursery }}</p>
         </b-list-group-item>
       </b-list-group>
-      <h1>Add plant</h1>
+      <!-- <h1>Add farm</h1>
+      <b-form @submit="onFarmSubmit" @reset="onFarmReset" v-if="show">
+        <b-row>
+          <b-col>
+            <label for="farmId">
+              Farm name
+            </label>
+          </b-col>
+          <b-col sm="9">
+            <b-form-input
+              id="farmId"
+              v-model="form.farmId"
+              type="text"
+              placeholder="Invergowrie"
+            />
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <label for="farmAddress">
+              Farm account address
+            </label>
+          </b-col>
+          <b-col sm="9">
+            <b-form-input
+              id="farmAddress"
+              v-model="form.farmAddress"
+              type="text"
+              placeholder="0x..."
+            />
+          </b-col>
+        </b-row>
+        <b-button type="submit" variant="primary">Submit</b-button>
+        <b-button type="reset" variant="secondary">Reset</b-button>
+      </b-form> -->
+      <!-- <h1>Add plant</h1>
       <b-form @submit="onSubmit" @reset="onReset" v-if="show">
         <b-row>
           <b-col>
@@ -104,7 +147,7 @@
         </b-row>
         <b-button type="submit" variant="primary">Submit</b-button>
         <b-button type="reset" variant="secondary">Reset</b-button>
-      </b-form>
+      </b-form> -->
     </b-container>
   </div>
 
@@ -114,7 +157,6 @@
 import web3 from '../util/getWeb3'
 import Supply from '../../build/contracts/Supply.json'
 import TruffleContract from 'truffle-contract'
-import { mkdir } from 'fs';
 
 export default {
   name: 'home',
@@ -131,6 +173,7 @@ export default {
         nursery: null,
         date: null
       },
+      nurseries: [],
       plants: [],
       states: [
         { value: 0, text: "Planted"},
@@ -150,17 +193,26 @@ export default {
       this.supplyContract.setProvider(this.w3.currentProvider)
       this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
 
+    //   this.supplyContract.deployed().then((contract) => {
+    //     contract.getPlantCount().then((count) => {
+    //        for (var i =0; i < count; i++)
+    //         contract.getPlant(i).then((plant) => {
+    //           this.addPlant(plant)
+    //         })
+    //     })
+    //   })
       this.supplyContract.deployed().then((contract) => {
-        contract.getPlantCount().then((count) => {
-           for (var i =0; i < count; i++)
-            contract.getPlant(i).then((plant) => {
-              this.addPlant(plant)
+        contract.getNurseryCount().then((count) => {
+          for (var i = 0; i < count; i++) {
+            contract.getNursery(i).then((nursery) => {
+              this.addNursery(nursery);
             })
+          }
         })
       })
     })
 
-    console.log(this.plants)
+    console.log(this.nurseries);
   },
   methods: {
     addPlant: function(plant) {
@@ -174,6 +226,16 @@ export default {
       }
 
       this.plants.push(p)
+    },
+    addNursery: function(nursery) {
+      let n = {
+        id: nursery[0].toNumber(),
+        name: nursery[1].toString(),
+        lat: nursery[2].toNumber(),
+        long: nursery[3].toNumber()
+      }
+
+      this.nurseries.push(n);
     },
     onSubmit(evt) {
       evt.preventDefault()
@@ -197,6 +259,15 @@ export default {
         this.show = true
       })
     }
+    // onFarmSubmit(evt) {
+    //   evt.preventDefault()
+    //   this.supplyContract.deployed().then((contract) => {
+    //     contract.addActor(this.form.farmId, 1, this.form.farmAddress)
+    //   })
+    // },
+    // onFarmReset(evt) {
+
+    // }
   }
 }
 </script>
