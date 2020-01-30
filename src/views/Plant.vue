@@ -1,15 +1,19 @@
 <template>
   <div class="container container-top">
     <b-container>
-      <h1>Plant Id: {{ plant.id }}</h1>
       <div class="row" v-if="plant !== null">
         <div class="col">
+          <h1>Plant Id: {{ plant.id }}</h1>
           <div class="row">
             <h4>Variety: {{ plant.variety }}</h4>
           </div>
           <div class="row" v-if="propogated !== null">
-            <h4>Propogated</h4>
+            <h4>Propogated by nursery</h4>
             <b-table :items="propogated"></b-table>
+          </div>
+          <div class="row" v-if="purchased !== null">
+            <h4>Purchased by farmer</h4>
+            <b-table :items="purchased"></b-table>
           </div>
         </div>
       </div>
@@ -73,6 +77,26 @@ export default {
             plant_owner: returnValues.plantOwner,
             nursery: returnValues.nurseryName,
             date: new Date(returnValues.date * 1000),
+            latitude: returnValues.lat,
+            longitude: returnValues.long
+          }]
+        })
+      })
+
+      this.supplyContract.deployed().then((contract) => {
+        contract.getPastEvents('PurchasedByFarmer', {
+          filter: {plantId: this.$route.params.plantId},
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+        .then((events) => {
+          const returnValues = events[0].returnValues;
+          this.purchased = [{
+            plant_id: returnValues.plantId,
+            plant_owner: returnValues.plantOwner,
+            nursery: returnValues.nurseryName,
+            purchasing_farm: returnValues.farmName,
+            purchase_date: new Date(returnValues.date * 1000),
             latitude: returnValues.lat,
             longitude: returnValues.long
           }]

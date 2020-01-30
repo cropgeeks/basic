@@ -11,6 +11,8 @@ contract Supply is Ownable {
 
   enum State { Propogated, Purchased, Shipped, Received, Planted, Harvested, Packed, Weighed, Stored, AtDistribution, Distributed, Sold }
 
+  enum OrderState { Ordered, Dispatched, Recevied }
+
   struct Owner {
     string friendlyName;
     uint date;
@@ -44,22 +46,32 @@ contract Supply is Ownable {
     address farmer;
   }
 
+  struct Order {
+    uint orderId;
+    address nursery;
+    address farmer;
+    uint[] plantIds;
+    OrderState state;
+  }
+
   Nursery[] public nurseries;
   mapping(address => Nursery) public nurseriesByOwners;
 
   // Dynamically sized plant array
   Plant[] public plants;
 
+  Order[] public orders;
+
   Farm[] public farms;
+  mapping(address => Farm) public farmsByOwners;
 
   event PropogatedByNursery(uint indexed plantId, address plantOwner, string nurseryName, uint date, int lat, int long);
-  event PurchasedByFarmer(uint indexed plantId, address plantOwner, uint date);
+  event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
   event ReceivedByFarmer(uint indexed plantId, address plantOwner, uint date);
   event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date);
 
   constructor() public {
-    // addPlant(0, State.Planted, 1566383873, 56, 3, "Invergowrie");
     addNurseryOwner(0x21111104e6933e6fb2bB4dc99AB5B65439226043);
     addNursery(0, "Glendoick", 56, 3, "Small nursery for raspberries", 0x21111104e6933e6fb2bB4dc99AB5B65439226043);
     addFarmer(0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
@@ -102,6 +114,7 @@ contract Supply is Ownable {
     require(farmers.has(farmer), "address is not a farmer");
     Farm memory farm = Farm(id, name, lat, long, farmer);
     farms.push(farm);
+    farmsByOwners[farmer] = farm;
   }
 
   function addPlant(uint id, State _state, uint _date, int _lat, int _long, string memory _nursery, string memory variety, address plantOwner) public {
@@ -121,5 +134,33 @@ contract Supply is Ownable {
   modifier purchasedByFarmer(uint id) {
     require(plants[id].state == State.Purchased, "the state of the plant in this function must be Purchased");
     _;
+  }
+
+  function isNurseryOwner() public view returns(bool) {
+    return nurseryOwners.has(msg.sender);
+  }
+
+  function isFarmer() public view returns(bool) {
+    return farmers.has(msg.sender);
+  }
+
+  function getOrderCount() public view returns(uint) {
+    return orders.length;
+  }
+
+  function orderPlants(uint[] memory plantIds, address nurseryOwner, uint purchaseDate) public {
+    require(farmers.has(msg.sender), "address is not a farmer");
+    uint orderId = orders.length;
+    Order memory order = Order(orderId, nurseryOwner, msg.sender, plantIds, OrderState.Ordered);
+
+    Farm memory farm = farmsByOwners[msg.sender];
+    Nursery memory nursery = nurseriesByOwners[nurseryOwner];
+
+    for (uint i = plantIds[0]; i < plantIds[0] + plantIds.length; i++) {
+      plants[i].state = State.Purchased;
+      emit PurchasedByFarmer(i, nurseryOwner, nursery.name, farm.name, purchaseDate, nursery.lat, nursery.long);
+    }
+
+    orders.push(order);
   }
 }

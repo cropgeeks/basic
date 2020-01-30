@@ -7,6 +7,10 @@ if (window.ethereum) {
     ethereum.enable().then((account) => {
       const defaultAccount = account[0]
       ethereum.defaultAccount = defaultAccount
+
+      // ethereum.on('accountsChanged', (accounts) => {
+      //   console.log('accountChanged: ', accounts[0]);
+      // })
     })
   } catch (error) {
     // User denied account access...
