@@ -202,6 +202,10 @@ export default {
     //     })
     //   })
       this.supplyContract.deployed().then((contract) => {
+        console.log(contract);
+        contract.isOwner().then((owner) => {
+          console.log(owner);
+        })
         contract.getNurseryCount().then((count) => {
           for (var i = 0; i < count; i++) {
             contract.getNursery(i).then((nursery) => {
@@ -211,8 +215,6 @@ export default {
         })
       })
     })
-
-    console.log(this.nurseries);
   },
   methods: {
     addPlant: function(plant) {

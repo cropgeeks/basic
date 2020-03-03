@@ -17946,12 +17946,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xdA54A5e62cB1cE46F2743AA96AA37f138d8445Ff",
-      "transactionHash": "0x10c7486bba372cea477f67ce9612ef4c6732bcc3e7438d5fc3ab99f186fa0272"
+      "address": "0x387Dcb3Bd8700Cb2d168d28E14fE404A46fCD611",
+      "transactionHash": "0x82b779113164b3b4505e4acadbed80d81b670540e8921f5eac7c645616869c71"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2020-01-30T15:07:31.378Z",
+  "updatedAt": "2020-03-03T10:10:08.539Z",
   "devdoc": {
     "methods": {
       "isOwner()": {
