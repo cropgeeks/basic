@@ -1,9 +1,9 @@
 <template>
   <div id="app">
-    <b-navbar toggleable="lg" type="dark" variant="dark">
+    <b-navbar toggleable="lg" type="light" variant="success">
       <b-navbar-brand>
         <router-link to="/">
-          BASIC
+          <img src="./assets/basic.svg" height="40px" alt="Basic">
         </router-link>
       </b-navbar-brand>
 
