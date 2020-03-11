@@ -1,54 +1,52 @@
 <template>
-  <div class="container container-top">
-    <b-container>
-      <h1>Nursery</h1>
-      <div class="row" v-if="nursery !== null">
-        <div class="col">
+  <b-container>
+    <h1>Nursery</h1>
+    <div class="row" v-if="nursery !== null">
+      <div class="col">
+        <div class="row">
+          <h2>{{ nursery.name }}</h2>
+        </div>
+        <div class="row">
+          <p>{{ nursery.description }}</p>
+        </div>
+        <div v-if="isNurseryOwner">
           <div class="row">
-            <h2>{{ nursery.name }}</h2>
+            <p>Propogated plants</p>
           </div>
           <div class="row">
-            <p>{{ nursery.description }}</p>
+            <b-table :items="propogated"></b-table>
           </div>
-          <div v-if="isNurseryOwner">
-            <div class="row">
-              <p>Propogated plants</p>
-            </div>
-            <div class="row">
-              <b-table :items="propogated"></b-table>
-            </div>
-            <div class="row" >
-              <p>Purcahsed &amp; Ready for dispatch</p>
-            </div>
-            <div class="row">
-              <b-table :items="purchased"></b-table>
-            </div>
+          <div class="row" >
+            <p>Purcahsed &amp; Ready for dispatch</p>
           </div>
-          <div class="row" v-if="isFarmer">
-            <div class="col">
-              <div class="row">
-                <h4>Buy plants</h4>
-              </div>
-              <div class="row">
-                <p>Variety: Glen Moy</p>
-              </div>
-              <div class="row">
-                <p>{{ stock }} in stock</p>
-              </div>
-              <b-form inline>
-                <label for="quantity">Number of plants</label>
-                <b-form-input class="mb-2 mr-sm-2 ml-sm-2 mb-sm-0" id="quantity" type="number" :min="1" :max="stock" v-model="quantity"></b-form-input>
-                <button @click="orderPlants" class="btn btn-primary" type="submit">Submit order</button>
-              </b-form>
-            </div>
-          </div>
-          <div class="row mt-3">
-            <b-button @click="propogatePlant" variant="primary" v-if="isNurseryOwner">Propogate plant</b-button>
+          <div class="row">
+            <b-table :items="purchased"></b-table>
           </div>
         </div>
+        <div class="row" v-if="isFarmer">
+          <div class="col">
+            <div class="row">
+              <h4>Buy plants</h4>
+            </div>
+            <div class="row">
+              <p>Variety: Glen Moy</p>
+            </div>
+            <div class="row">
+              <p>{{ stock }} in stock</p>
+            </div>
+            <b-form inline>
+              <label for="quantity">Number of plants</label>
+              <b-form-input class="mb-2 mr-sm-2 ml-sm-2 mb-sm-0" id="quantity" type="number" :min="1" :max="stock" v-model="quantity"></b-form-input>
+              <button @click="orderPlants" class="btn btn-primary" type="submit">Submit order</button>
+            </b-form>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <b-button @click="propogatePlant" variant="primary" v-if="isNurseryOwner">Propogate plant</b-button>
+        </div>
       </div>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 
 </template>
 

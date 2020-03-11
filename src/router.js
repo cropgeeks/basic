@@ -14,6 +14,30 @@ const router = new Router({
       }
     },
     {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('./views/Admin.vue'),
+      meta: {
+        title: 'BASIC - Admin',
+      }
+    },
+    {
+      path: '/admin/nursery',
+      name: 'admin-nursery',
+      component: () => import('./views/AddNursery.vue'),
+      meta: {
+        title: 'BASIC - Admin | Add Nursery',
+      }
+    },
+    {
+      path: '/admin/roles',
+      name: 'admin-roles',
+      component: () => import('./views/AddAccount.vue'),
+      meta: {
+        title: 'BASIC - Admin | Add Account',
+      }
+    },
+    {
       path: '/nurseries',
       name: 'nurseries',
       component: () => import('./views/Nurseries.vue'),

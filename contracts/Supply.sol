@@ -9,13 +9,16 @@ contract Supply is Ownable {
   Roles.Role private nurseryOwners;
   Roles.Role private farmers;
 
+  Owner[] public nurseryOwnerList;
+  Owner[] public farmOwnerList;
+
   enum State { Propogated, Purchased, Shipped, Received, Planted, Harvested, Packed, Weighed, Stored, AtDistribution, Distributed, Sold }
 
   enum OrderState { Ordered, Dispatched, Recevied }
 
   struct Owner {
-    string friendlyName;
-    uint date;
+    string name;
+    address ownerAddress;
   }
 
   struct Nursery {
@@ -65,6 +68,8 @@ contract Supply is Ownable {
   Farm[] public farms;
   mapping(address => Farm) public farmsByOwners;
 
+  event AddedNurseryOwner(string name, address nurseryOwner);
+  event AddedFarmOwner(string name, address farmOwner);
   event PropogatedByNursery(uint indexed plantId, address plantOwner, string nurseryName, uint date, int lat, int long);
   event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
@@ -72,14 +77,26 @@ contract Supply is Ownable {
   event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date);
 
   constructor() public {
-    addNurseryOwner(0x21111104e6933e6fb2bB4dc99AB5B65439226043);
-    addNursery(0, "Glendoick", 56, 3, "Small nursery for raspberries", 0x21111104e6933e6fb2bB4dc99AB5B65439226043);
-    addFarmer(0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
-    addFarm(0, "Invergowrie", 56, 3, 0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
+    // addNurseryOwner(0x21111104e6933e6fb2bB4dc99AB5B65439226043);
+    // addNursery(0, "Raspberry Nursery", 56, 3, "Small nursery for raspberries", 0x21111104e6933e6fb2bB4dc99AB5B65439226043);
+    // addFarmer(0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
+    // addFarm(0, "Invergowrie", 56, 3, 0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
   }
 
-  function addNurseryOwner(address nurseryOwner) public onlyOwner {
+  function addNurseryOwner(string memory name, address nurseryOwner) public onlyOwner {
     nurseryOwners.add(nurseryOwner);
+    Owner memory owner = Owner(name, nurseryOwner);
+    nurseryOwnerList.push(owner);
+    emit AddedNurseryOwner(name, nurseryOwner);
+  }
+
+  function getNurseryOwnerCount() public view returns(uint) {
+    return nurseryOwnerList.length;
+  }
+
+  function getNurseryOwner(uint index) public view returns(string memory, address) {
+    Owner memory nurseryOwner = nurseryOwnerList[index];
+    return (nurseryOwner.name, nurseryOwner.ownerAddress);
   }
 
   function addNursery(uint id, string memory name, int lat, int long, string memory nurseryDescription, address nurseryOwner) public onlyOwner {
@@ -106,8 +123,20 @@ contract Supply is Ownable {
     emit PropogatedByNursery(plantId, msg.sender, nursery.name, date, nursery.lat, nursery.long);
   }
 
-   function addFarmer(address farmer) public onlyOwner {
-    farmers.add(farmer);
+   function addFarmOwner(string memory name, address farmOwner) public onlyOwner {
+    farmers.add(farmOwner);
+    Owner memory owner = Owner(name, farmOwner);
+    farmOwnerList.push(owner);
+    emit AddedFarmOwner(name, farmOwner);
+  }
+
+  function getFarmOwnerCount() public view returns(uint) {
+    return farmOwnerList.length;
+  }
+
+  function getFarmOwner(uint index) public view returns(string memory, address) {
+    Owner memory farmOwner = farmOwnerList[index];
+    return (farmOwner.name, farmOwner.ownerAddress);
   }
 
   function addFarm(uint id, string memory name, int lat, int long, address farmer) public onlyOwner {

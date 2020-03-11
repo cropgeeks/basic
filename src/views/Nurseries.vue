@@ -1,24 +1,42 @@
 <template>
-  <div class="container container-top">
-    <b-container>
-      <h1>Nurseries</h1>
-      <div class="row">
-        <div v-for="nursery in nurseries" v-bind:key="nursery.id" class="col-md-3 col-6 my-1">
-          <div class="card h-100">
-          <div class="card-body">
-            <div class="card-title">{{ nursery.name }}</div>
-            <div class="card-text">
-              {{ nursery.description }}
-            </div>
+  <b-container class="container-top">
+    <h1>Nurseries</h1>
+    <div class="row" v-if="isAdmin">
+      <div class="col">
+        <h2>Add Nursery</h2>
+        <b-form>
+          <b-form-group label="Name" label-for="nursery-name" label-align="left">
+            <b-input id="nursery-name" size="sm" placeholder="Name" v-model="nurseryName"/>
+          </b-form-group>
+          <b-form-group label="Latitude" label-for="nursery-lat" label-align="left">
+            <b-input id="nursery-lat" size="sm" placeholder="0" type="number" step="0.01" min="-90" max="90" v-model="nurseryLat"/>
+          </b-form-group>
+          <b-form-group label="Longitude" label-for="nursery-long" label-align="left">
+            <b-input id="nursery-long" size="sm" placeholder="0" type="number" step="0.01" min="-180" max="180" v-model="nurseryLong"/>
+          </b-form-group>
+          <b-form-group label="Description" label-for="nursery-desc" label-align="left">
+            <b-input id="nursery-description" type="text" size="sm" placeholder="Nursery description" v-model="nurseryDesc"/>
+          </b-form-group>
+          <button class="btn btn-primary float-left" type="submit">Add nursery</button>
+        </b-form>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div v-for="nursery in nurseries" v-bind:key="nursery.id" class="col-md-3 col-6 my-1">
+        <div class="card h-100">
+        <div class="card-body">
+          <div class="card-title">{{ nursery.name }}</div>
+          <div class="card-text">
+            {{ nursery.description }}
           </div>
-          <div class="card-footer">
-            <b-button @click="$router.push({ name: 'nursery', params: { nurseryId: nursery.id }})" variant="primary">Manage</b-button>
-          </div>
+        </div>
+        <div class="card-footer">
+          <b-button @click="$router.push({ name: 'nursery', params: { nurseryId: nursery.id }})" variant="primary">View</b-button>
         </div>
       </div>
     </div>
-    </b-container>
   </div>
+  </b-container>
 
 </template>
 
@@ -34,7 +52,11 @@ export default {
       w3: web3,
       defaultAccount: null,
       supplyContract: null,
-      nurseries: []
+      nurseries: [],
+      nurseryName: null,
+      nurseryLat: null,
+      nurseryLong: null,
+      nurseryDesc: null
     }
   },
   mounted() {
