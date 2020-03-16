@@ -11,12 +11,14 @@ contract Supply is Ownable {
 
   Owner[] public nurseryOwnerList;
   Owner[] public farmOwnerList;
+  Owner[] public ownerList;
 
   enum State { Propogated, Purchased, Shipped, Received, Planted, Harvested, Packed, Weighed, Stored, AtDistribution, Distributed, Sold }
 
   enum OrderState { Ordered, Dispatched, Recevied }
 
   struct Owner {
+    uint id;
     string name;
     address ownerAddress;
   }
@@ -27,7 +29,7 @@ contract Supply is Ownable {
     int lat;
     int long;
     string description;
-    address nurseryOwner;
+    uint ownerId;
   }
 
   struct Plant {
@@ -70,6 +72,7 @@ contract Supply is Ownable {
 
   event AddedNurseryOwner(string name, address nurseryOwner);
   event AddedFarmOwner(string name, address farmOwner);
+  event AddedNursery(uint nurseryId, string nurseryName, int lat, int long, string description, uint ownerId, string ownerName);
   event PropogatedByNursery(uint indexed plantId, address plantOwner, string nurseryName, uint date, int lat, int long);
   event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
@@ -83,9 +86,14 @@ contract Supply is Ownable {
     // addFarm(0, "Invergowrie", 56, 3, 0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
   }
 
+  function getOwnerCount() public view returns(uint) {
+    return ownerList.length;
+  }
+
   function addNurseryOwner(string memory name, address nurseryOwner) public onlyOwner {
     nurseryOwners.add(nurseryOwner);
-    Owner memory owner = Owner(name, nurseryOwner);
+    Owner memory owner = Owner(ownerList.length, name, nurseryOwner);
+    ownerList.push(owner);
     nurseryOwnerList.push(owner);
     emit AddedNurseryOwner(name, nurseryOwner);
   }
@@ -94,25 +102,28 @@ contract Supply is Ownable {
     return nurseryOwnerList.length;
   }
 
-  function getNurseryOwner(uint index) public view returns(string memory, address) {
+  function getNurseryOwner(uint index) public view returns(uint, string memory, address) {
     Owner memory nurseryOwner = nurseryOwnerList[index];
-    return (nurseryOwner.name, nurseryOwner.ownerAddress);
+    return (nurseryOwner.id, nurseryOwner.name, nurseryOwner.ownerAddress);
   }
 
-  function addNursery(uint id, string memory name, int lat, int long, string memory nurseryDescription, address nurseryOwner) public onlyOwner {
-    require(nurseryOwners.has(nurseryOwner), "address is not a nursery owner");
-    Nursery memory nursery = Nursery(id, name, lat, long, nurseryDescription, nurseryOwner);
+  function addNursery(string memory name, int lat, int long, string memory nurseryDescription, uint ownerId) public onlyOwner {
+    Owner memory owner = ownerList[ownerId];
+    require(nurseryOwners.has(owner.ownerAddress), "address is not a nursery owner");
+    Nursery memory nursery = Nursery(nurseries.length, name, lat, long, nurseryDescription, ownerId);
     nurseries.push(nursery);
-    nurseriesByOwners[nurseryOwner] = nursery;
+    nurseriesByOwners[owner.ownerAddress] = nursery;
+    emit AddedNursery(nursery.id, name, lat, long, nurseryDescription, ownerId, owner.name);
   }
 
   function getNurseryCount() public view returns(uint) {
     return nurseries.length;
   }
 
-  function getNursery(uint index) public view returns(uint, string memory, int, int, string memory, address) {
+  function getNursery(uint index) public view returns(uint, string memory, int, int, string memory, string memory) {
     Nursery memory nursery = nurseries[index];
-    return (nursery.id, nursery.name, nursery.lat, nursery.long, nursery.description, nursery.nurseryOwner);
+    Owner memory owner = ownerList[nursery.ownerId];
+    return (nursery.id, nursery.name, nursery.lat, nursery.long, nursery.description, owner.name);
   }
 
   function propogatePlant(uint date) public {
@@ -125,7 +136,8 @@ contract Supply is Ownable {
 
    function addFarmOwner(string memory name, address farmOwner) public onlyOwner {
     farmers.add(farmOwner);
-    Owner memory owner = Owner(name, farmOwner);
+    Owner memory owner = Owner(ownerList.length, name, farmOwner);
+    ownerList.push(owner);
     farmOwnerList.push(owner);
     emit AddedFarmOwner(name, farmOwner);
   }

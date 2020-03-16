@@ -70,13 +70,14 @@ export default {
       this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
 
       this.supplyContract.deployed().then((contract) => {
-        contract.getNurseryCount().then((count) => {
-          for (var i = 0; i < count; i++) {
-            contract.getNursery(i).then((nursery) => {
-              this.addNursery(nursery);
-            })
-          }
-        })
+        this.nurseries = this.getNurseries(contract);
+        // contract.getNurseryCount().then((count) => {
+        //   for (var i = 0; i < count; i++) {
+        //     contract.getNursery(i).then((nursery) => {
+        //       this.addNursery(nursery);
+        //     })
+        //   }
+        // })
       })
     })
   },
