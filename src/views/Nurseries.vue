@@ -1,21 +1,22 @@
 <template>
   <b-container class="container-top">
     <h1>Nurseries</h1>
-    <div class="row mt-3">
-      <div v-for="nursery in nurseries" v-bind:key="nursery.id" class="col-md-3 col-6 my-1">
-        <div class="card h-100">
-        <div class="card-body">
-          <div class="card-title">{{ nursery.name }}</div>
-          <div class="card-text">
+    <div class="row">
+      <b-card-group deck v-for="nursery in nurseries" v-bind:key="nursery.id">
+        <b-card
+          :title="nursery.name"
+          img-src="~@/assets/plantnursery.jpg"
+          :img-alt="nursery.name"
+        >
+          <b-card-text>
             {{ nursery.description }}
-          </div>
-        </div>
-        <div class="card-footer">
-          <b-button @click="$router.push({ name: 'nursery', params: { nurseryId: nursery.id }})" variant="primary">View</b-button>
-        </div>
-      </div>
+          </b-card-text>
+          <b-button @click="$router.push({ name: 'nursery', params: { nurseryId: nursery.id }})" variant="primary">
+            View
+          </b-button>
+        </b-card>
+      </b-card-group>
     </div>
-  </div>
   </b-container>
 
 </template>
