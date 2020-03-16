@@ -31,6 +31,41 @@ export default {
       contract.isOwner().then((isOwner) => {
         this.isAdmin = isOwner;
       })
+    },
+    getNurseries: function(contract) {
+      const nurseries = [];
+      contract.getNurseryCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getNursery(i).then((nursery) => {
+            let n = {
+              id: nursery[0].toNumber(),
+              name: nursery[1].toString(),
+              lat: nursery[2].toNumber(),
+              long: nursery[3].toNumber(),
+              description: nursery[4].toString(),
+              owner: nursery[5].toString()
+            }
+            nurseries.push(n);
+          })
+        }
+      })
+      return nurseries;
+    },
+    getNurseryOwners: function(contract) {
+      const owners = [];
+      contract.getNurseryOwnerCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getNurseryOwner(i).then((owner) => {
+            let n = {
+              id: owner[0].toNumber(),
+              name: owner[1].toString(),
+              address: owner[2].toString()
+            }
+            owners.push(n);
+          })
+        }
+      })
+      return owners;
     }
   }
 }
