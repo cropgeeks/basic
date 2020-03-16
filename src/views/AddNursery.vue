@@ -44,7 +44,8 @@ export default {
       nurseryLat: null,
       nurseryLong: null,
       nurseryDesc: null,
-      nurseryOwner: null
+      nurseryOwner: null,
+      owners: []
     }
   },
   mounted() {
