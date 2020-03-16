@@ -1,26 +1,6 @@
 <template>
   <b-container class="container-top">
     <h1>Nurseries</h1>
-    <div class="row" v-if="isAdmin">
-      <div class="col">
-        <h2>Add Nursery</h2>
-        <b-form>
-          <b-form-group label="Name" label-for="nursery-name" label-align="left">
-            <b-input id="nursery-name" size="sm" placeholder="Name" v-model="nurseryName"/>
-          </b-form-group>
-          <b-form-group label="Latitude" label-for="nursery-lat" label-align="left">
-            <b-input id="nursery-lat" size="sm" placeholder="0" type="number" step="0.01" min="-90" max="90" v-model="nurseryLat"/>
-          </b-form-group>
-          <b-form-group label="Longitude" label-for="nursery-long" label-align="left">
-            <b-input id="nursery-long" size="sm" placeholder="0" type="number" step="0.01" min="-180" max="180" v-model="nurseryLong"/>
-          </b-form-group>
-          <b-form-group label="Description" label-for="nursery-desc" label-align="left">
-            <b-input id="nursery-description" type="text" size="sm" placeholder="Nursery description" v-model="nurseryDesc"/>
-          </b-form-group>
-          <button class="btn btn-primary float-left" type="submit">Add nursery</button>
-        </b-form>
-      </div>
-    </div>
     <div class="row mt-3">
       <div v-for="nursery in nurseries" v-bind:key="nursery.id" class="col-md-3 col-6 my-1">
         <div class="card h-100">
@@ -42,57 +22,40 @@
 
 <script>
 import web3 from '../util/getWeb3'
-import Supply from '../../build/contracts/Supply.json'
-import TruffleContract from 'truffle-contract'
 
 export default {
   name: 'home',
   data() {
     return {
-      w3: web3,
-      defaultAccount: null,
-      supplyContract: null,
       nurseries: [],
-      nurseryName: null,
-      nurseryLat: null,
-      nurseryLong: null,
-      nurseryDesc: null
     }
   },
   mounted() {
-    web3.eth.getAccounts().then((acc) => {
-      this.defaultAccount = acc[0]
-      web3.eth.defaultAccount = acc[0]
-
-      this.supplyContract = TruffleContract(Supply)
-      
-      this.supplyContract.setProvider(this.w3.currentProvider)
-      this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-
+    web3.eth.getAccounts().then(() => {
       this.supplyContract.deployed().then((contract) => {
         this.nurseries = this.getNurseries(contract);
-        // contract.getNurseryCount().then((count) => {
-        //   for (var i = 0; i < count; i++) {
-        //     contract.getNursery(i).then((nursery) => {
-        //       this.addNursery(nursery);
-        //     })
-        //   }
-        // })
+        this.setupNurseryAddedEvent(contract);
       })
     })
   },
   methods: {
-    addNursery: function(nursery) {
-      let n = {
-        id: nursery[0].toNumber(),
-        name: nursery[1].toString(),
-        lat: nursery[2].toNumber(),
-        long: nursery[3].toNumber(),
-        description: nursery[4].toString(),
-      }
+    // TODO: this code is duplicated from AddNursery page...think about best way
+    // to eliminate code duplication
+    // Setup the event listener which checks for the addition of new nurseries
+    setupNurseryAddedEvent: function(contract) {
+      contract.AddedNursery().on('data', event => {
+        let n = {
+          id: event.returnValues.nurseryId,
+          name: event.returnValues.nurseryName,
+          lat: event.returnValues.lat,
+          long: event.returnValues.long,
+          description: event.returnValues.description,
+          owner: event.returnValues.ownerName
+        }
 
-      this.nurseries.push(n);
-    }
+        this.nurseries.push(n);
+      });
+    },
   }
 }
 </script>
