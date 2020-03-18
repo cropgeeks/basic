@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container class="container-top">
     <h1>Nursery</h1>
     <div class="row" v-if="nursery !== null">
       <div class="col">
@@ -11,39 +11,37 @@
         </div>
         <div v-if="isNurseryOwner">
           <div class="row">
-            <p>Propogated plants</p>
+            <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
+            <b-pagination
+              v-if="propogated.length > 0"
+              v-model="propCurrentPage"
+              :total-rows="propogated.length"
+              :per-page="propPerPage"
+              size="sm"
+            ></b-pagination>
           </div>
           <div class="row">
-            <b-table :items="propogated"></b-table>
-          </div>
-          <div class="row" >
-            <p>Purcahsed &amp; Ready for dispatch</p>
-          </div>
-          <div class="row">
-            <b-table :items="purchased"></b-table>
-          </div>
-        </div>
-        <div class="row" v-if="isFarmer">
-          <div class="col">
-            <div class="row">
-              <h4>Buy plants</h4>
-            </div>
-            <div class="row">
-              <p>Variety: Glen Moy</p>
-            </div>
-            <div class="row">
-              <p>{{ stock }} in stock</p>
-            </div>
-            <b-form inline>
-              <label for="quantity">Number of plants</label>
-              <b-form-input class="mb-2 mr-sm-2 ml-sm-2 mb-sm-0" id="quantity" type="number" :min="1" :max="stock" v-model="quantity"></b-form-input>
-              <button @click="orderPlants" class="btn btn-primary" type="submit">Submit order</button>
-            </b-form>
+            <b-table class="md-0" striped hover small bordered caption-top caption="Purcahsed &amp; Ready for dispatch" :items="purchased"></b-table>
+            <b-pagination
+              v-if="purchased.length > 0"
+              v-model="purchasedCurrentPage"
+              :total-rows="purchased.length"
+              :per-page="purchasedPerPage"
+              size="sm"
+            ></b-pagination>
           </div>
         </div>
-        <div class="row mt-3">
-          <b-button @click="propogatePlant" variant="primary" v-if="isNurseryOwner">Propogate plant</b-button>
-        </div>
+        <b-button v-if="isNurseryOwner" v-b-modal.propogateModal class="float-left" variant="primary">Propogate plants</b-button>
+        <b-modal id="propogateModal" title="Propogate plants" @ok="propogatePlants">
+          <b-form>
+            <b-form-group label="Variety" label-for="variety" label-align="left">
+              <b-input id="variety" size="sm" v-model="variety"></b-input>
+            </b-form-group>
+            <b-form-group label="Quantity" label-for="quantity" label-align="left">
+              <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" v-model="propQuantity"/>
+            </b-form-group>
+          </b-form>
+        </b-modal>
       </div>
     </div>
   </b-container>
@@ -52,68 +50,38 @@
 
 <script>
 import web3 from '../util/getWeb3'
-import Supply from '../../build/contracts/Supply.json'
-import TruffleContract from 'truffle-contract'
 
 export default {
   name: 'home',
   data() {
     return {
-      w3: web3,
-      defaultAccount: null,
-      supplyContract: null,
       nursery: null,
       plants: [],
-      propogated: [],
-      purchased: [],
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
       isNurseryOwner: false,
       isFarmer: false,
-      stock: 0,
-      quantity: 1
+      quantity: 1,
+      variety: null,
+      propQuantity: null,
+      propPerPage: 10,
+      propCurrentPage: 1,
+      purchasedPerPage: 10,
+      purchasedCurrentPage: 1
     }
   },
   mounted() {
-    web3.eth.getAccounts().then((acc) => {
-      this.defaultAccount = acc[0]
-      web3.eth.defaultAccount = acc[0]
-
-      this.supplyContract = TruffleContract(Supply)
-      
-      this.supplyContract.setProvider(this.w3.currentProvider)
-      this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-
+    web3.eth.getAccounts().then(() => {
       // Handle account changes
-      web3.currentProvider.publicConfigStore.on('update', (update) => {
-        const newAddress = update.selectedAddress;
-        this.defaultAccount = newAddress;
-        web3.eth.defaultAccount = newAddress;
-        this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-      });
+      // web3.currentProvider.publicConfigStore.on('update', (update) => {
+      //   const newAddress = update.selectedAddress;
+      //   this.defaultAccount = newAddress;
+      //   web3.eth.defaultAccount = newAddress;
+      //   this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
+      // });
 
       this.supplyContract.deployed().then((contract) => {
-        // Retrieve nursery info
-        contract.getNursery(this.$route.params.nurseryId).then((n) => {
-          this.nursery = {
-            id: n[0].toNumber(),
-            name: n[1].toString(),
-            lat: n[2].toNumber(),
-            long: n[3].toNumber(),
-            description: n[4].toString(),
-            address: n[5]
-          }
-        })
-
-        // Get plant info for nursery
-        contract.getPlantCount().then((count) => {
-          for (var i =0; i < count; i++)
-          contract.getPlant(i).then((plant) => {
-            this.addPlant(plant)
-          })
-          .then(() => {
-            this.stock = this.propogated.length;
-          })
-        })
+        this.initNursery(contract);
+        this.initNurseryPlants(contract);
 
         this.isNurseryOwner = false;
         this.isFarmer = false;
@@ -127,59 +95,34 @@ export default {
         contract.isFarmer().then(isFarmer => {
           this.isFarmer = isFarmer;
         })
+
+        this.setupPlantPropogatedEvent(contract);
       })
     })
   },
-  watch: {
-    defaultAccount: function() {
-      this.isNurseryOwner = false;
-      this.isFarmer = false;
-
-      this.supplyContract.deployed().then((contract) => {
-        contract.isNurseryOwner().then(isOwner => {
-          this.isNurseryOwner = isOwner;
-        })
-        contract.isFarmer().then(isFarmer => {
-          this.isFarmer = isFarmer;
-        })
-      })
+  computed: {
+    propogated: function() {
+      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Propogated');
+    },
+    purchased: function() {
+      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Purchased');
+    },
+    stock: function() {
+      return this.propogated.length;
     }
   },
   methods: {
-    propogatePlant() {
-      web3.eth.getAccounts().then((acc) => {
-        this.defaultAccount = acc[0]
-        web3.eth.defaultAccount = acc[0]
-
-        this.supplyContract = TruffleContract(Supply)
-        
-        this.supplyContract.setProvider(this.w3.currentProvider)
-        this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-
-        this.supplyContract.deployed().then((contract) => {
-          let date = (new Date()).getTime();
-          let timestamp = Math.floor(date / 1000);
-          contract.propogatePlant(timestamp);
-        })
+    propogatePlants: function() {
+      this.supplyContract.deployed().then((contract) => {
+        let date = (new Date()).getTime();
+        let timestamp = Math.floor(date / 1000);
+        contract.propogatePlants(timestamp, this.variety, this.propQuantity);
+      }).catch(error => {
+        console.log(error);
+      }).then(() => {
+        this.variety = null;
+        this.propQuantity = null;
       })
-    },
-    addPlant: function(plant) {
-      let p = {
-        id: plant[0].toNumber(),
-        state: this.states[plant[1].toNumber()],
-        plantedDate: new Date(plant[2].toNumber() * 1000),
-        lat: plant[3].toNumber(),
-        long: plant[4].toNumber(),
-        nursery: plant[5].toString(),
-        variety: plant[6].toString(),
-        address: plant[7].toString()
-      }
-      if (p.nursery === this.nursery.name && p.state === 'Propogated') {
-        this.propogated.push(p)
-      }
-      else if (p.nursery === this.nursery.name && p.state === 'Purchased') {
-        this.purchased.push(p);
-      }
     },
     orderPlants: function() {
       const ordered = this.propogated.slice(0, this.quantity).map(p => p.id);
@@ -190,6 +133,57 @@ export default {
 
       this.supplyContract.deployed().then((contract) => {
         contract.orderPlants(ordered, this.nursery.address, timestamp)
+      })
+    },
+    initNursery: function(contract) {
+      // Retrieve nursery info
+      contract.getNursery(this.$route.params.nurseryId).then((n) => {
+        this.nursery = {
+          id: n[0].toNumber(),
+          name: n[1].toString(),
+          lat: n[2].toNumber(),
+          long: n[3].toNumber(),
+          description: n[4].toString(),
+          ownerName: n[5].toString(),
+          ownerId: n[6].toString()
+        }
+      })
+    },
+    initNurseryPlants: function(contract) {
+      // Get plant info for nursery
+      contract.getPlantCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getPlant(i).then((plant) => {
+            let p = {
+              id: plant[0].toNumber(),
+              state: this.states[plant[1].toNumber()],
+              plantedDate: new Date(plant[2].toNumber() * 1000),
+              lat: plant[3].toNumber(),
+              long: plant[4].toNumber(),
+              nursery: plant[5].toString(),
+              variety: plant[6].toString(),
+              ownerId: plant[7].toNumber()
+            }
+            this.plants.push(p);
+          })
+        }
+      })
+    },
+    setupPlantPropogatedEvent: function(contract) {
+      contract.PropogatedByNursery().on('data', event => {
+        let p = {
+          id: event.returnValues.plantId,
+          state: event.returnValues.state,
+          plantedDate: new Date(event.returnValues.date * 1000),
+          lat: event.returnValues.lat,
+          long: event.returnValues.long,
+          nursery: event.returnValues.name,
+          variety: event.returnValues.variety,
+          ownerId: event.returnValues.ownerId
+        }
+        if (p.ownerId === this.nursery.ownerId) {
+          this.propogated.push(p);
+        }
       })
     }
   }
