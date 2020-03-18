@@ -40,7 +40,7 @@ contract Supply is Ownable {
     int long; // Longitude of plant location
     string sourceNursery; // Nursery plant was grown at
     string variety;
-    address plantOwner;
+    uint ownerId;
   }
 
   struct Farm {
@@ -73,7 +73,7 @@ contract Supply is Ownable {
   event AddedNurseryOwner(string name, address nurseryOwner);
   event AddedFarmOwner(string name, address farmOwner);
   event AddedNursery(uint nurseryId, string nurseryName, int lat, int long, string description, uint ownerId, string ownerName);
-  event PropogatedByNursery(uint indexed plantId, address plantOwner, string nurseryName, uint date, int lat, int long);
+  event PropogatedByNursery(uint indexed plantId, Supply.State state, uint date, int lat, int long, string name, string variety, uint indexed ownerId);
   event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
   event ReceivedByFarmer(uint indexed plantId, address plantOwner, uint date);
@@ -120,18 +120,21 @@ contract Supply is Ownable {
     return nurseries.length;
   }
 
-  function getNursery(uint index) public view returns(uint, string memory, int, int, string memory, string memory) {
+  function getNursery(uint index) public view returns(uint, string memory, int, int, string memory, string memory, uint) {
     Nursery memory nursery = nurseries[index];
     Owner memory owner = ownerList[nursery.ownerId];
-    return (nursery.id, nursery.name, nursery.lat, nursery.long, nursery.description, owner.name);
+    return (nursery.id, nursery.name, nursery.lat, nursery.long, nursery.description, owner.name, nursery.ownerId);
   }
 
-  function propogatePlant(uint date) public {
+  function propogatePlants(uint date, string memory variety, int quantity) public {
     require(nurseryOwners.has(msg.sender), "only nursery owner can propogate plants");
     Nursery memory nursery = nurseriesByOwners[msg.sender];
     uint plantId = plants.length;
-    addPlant(plantId, State.Propogated, date, nursery.lat, nursery.long, nursery.name, "Glen Moy", msg.sender);
-    emit PropogatedByNursery(plantId, msg.sender, nursery.name, date, nursery.lat, nursery.long);
+    for (int i = 0; i < quantity; i++) {
+      addPlant(plantId, State.Propogated, date, nursery.lat, nursery.long, nursery.name, variety, nursery.ownerId);
+      emit PropogatedByNursery(plantId, State.Propogated, date, nursery.lat, nursery.long, nursery.name, variety, nursery.ownerId);
+      plantId++;
+    }
   }
 
    function addFarmOwner(string memory name, address farmOwner) public onlyOwner {
@@ -158,8 +161,8 @@ contract Supply is Ownable {
     farmsByOwners[farmer] = farm;
   }
 
-  function addPlant(uint id, State _state, uint _date, int _lat, int _long, string memory _nursery, string memory variety, address plantOwner) public {
-    Plant memory plant = Plant(id, _state, _date, _lat, _long, _nursery, variety, plantOwner);
+  function addPlant(uint id, State _state, uint _date, int _lat, int _long, string memory _nursery, string memory variety, uint ownerId) public {
+    Plant memory plant = Plant(id, _state, _date, _lat, _long, _nursery, variety, ownerId);
     plants.push(plant);
   }
 
@@ -167,9 +170,9 @@ contract Supply is Ownable {
     return plants.length;
   }
 
-  function getPlant(uint index) public view returns(uint, State, uint, int, int, string memory, string memory, address plantOwner) {
+  function getPlant(uint index) public view returns(uint, State, uint, int, int, string memory, string memory, uint ownerId) {
     Plant memory plant = plants[index];
-    return (plant.id, plant.state, plant.plantedDate, plant.lat, plant.long, plant.sourceNursery, plant.variety, plant.plantOwner);
+    return (plant.id, plant.state, plant.plantedDate, plant.lat, plant.long, plant.sourceNursery, plant.variety, plant.ownerId);
   }
 
   modifier purchasedByFarmer(uint id) {
