@@ -62,6 +62,14 @@ const router = new Router({
       }
     },
     {
+      path: '/farms',
+      name: 'farms',
+      component: () => import('./views/Farms.vue'),
+      meta: {
+        title: 'BASIC - Farms',
+      }
+    },
+    {
       path: '/plants',
       name: 'plants',
       component: () => import('./views/Plants.vue'),
