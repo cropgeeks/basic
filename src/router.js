@@ -38,6 +38,14 @@ const router = new Router({
       }
     },
     {
+      path: '/admin/farm',
+      name: 'admin-farm',
+      component: () => import('./views/AddFarm.vue'),
+      meta: {
+        title: 'BASIC - Admin | Add Farm',
+      }
+    },
+    {
       path: '/nurseries',
       name: 'nurseries',
       component: () => import('./views/Nurseries.vue'),
