@@ -66,6 +66,41 @@ export default {
         }
       })
       return owners;
+    },
+    getFarms: function(contract) {
+      const farms = [];
+      contract.getFarmCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getFarm(i).then((farm) => {
+            let n = {
+              id: farm[0].toNumber(),
+              name: farm[1].toString(),
+              lat: farm[2].toNumber(),
+              long: farm[3].toNumber(),
+              description: farm[4].toString(),
+              owner: farm[5].toString()
+            }
+            farms.push(n);
+          })
+        }
+      })
+      return farms;
+    },
+    getFarmOwners: function(contract) {
+      const owners = [];
+      contract.getFarmOwnerCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getFarmOwner(i).then((owner) => {
+            let n = {
+              id: owner[0].toNumber(),
+              name: owner[1].toString(),
+              address: owner[2].toString()
+            }
+            owners.push(n);
+          })
+        }
+      })
+      return owners;
     }
   }
 }

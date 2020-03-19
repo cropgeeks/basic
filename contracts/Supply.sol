@@ -48,7 +48,8 @@ contract Supply is Ownable {
     string name;
     int lat;
     int long;
-    address farmer;
+    string description;
+    uint ownerId;
   }
 
   struct Order {
@@ -73,6 +74,7 @@ contract Supply is Ownable {
   event AddedNurseryOwner(string name, address nurseryOwner);
   event AddedFarmOwner(string name, address farmOwner);
   event AddedNursery(uint nurseryId, string nurseryName, int lat, int long, string description, uint ownerId, string ownerName);
+  event AddedFarm(uint farmId, string farmName, int lat, int long, string description, uint ownerId, string ownerName);
   event PropogatedByNursery(uint indexed plantId, Supply.State state, uint date, int lat, int long, string name, string variety, uint indexed ownerId);
   event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
@@ -149,16 +151,28 @@ contract Supply is Ownable {
     return farmOwnerList.length;
   }
 
-  function getFarmOwner(uint index) public view returns(string memory, address) {
+  function getFarmOwner(uint index) public view returns(uint, string memory, address) {
     Owner memory farmOwner = farmOwnerList[index];
-    return (farmOwner.name, farmOwner.ownerAddress);
+    return (farmOwner.id, farmOwner.name, farmOwner.ownerAddress);
   }
 
-  function addFarm(uint id, string memory name, int lat, int long, address farmer) public onlyOwner {
-    require(farmers.has(farmer), "address is not a farmer");
-    Farm memory farm = Farm(id, name, lat, long, farmer);
+  function addFarm(string memory name, int lat, int long, string memory description, uint ownerId) public onlyOwner {
+    Owner memory owner = ownerList[ownerId];
+    require(farmers.has(owner.ownerAddress), "address is not a farmer");
+    Farm memory farm = Farm(farms.length, name, lat, long, description, ownerId);
     farms.push(farm);
-    farmsByOwners[farmer] = farm;
+    farmsByOwners[owner.ownerAddress] = farm;
+    emit AddedFarm(farm.id, name, lat, long, description, ownerId, owner.name);
+  }
+
+  function getFarmCount() public view returns(uint) {
+    return farms.length;
+  }
+
+  function getFarm(uint index) public view returns(uint, string memory, int, int, string memory, string memory, uint) {
+    Farm memory farm = farms[index];
+    Owner memory owner = ownerList[farm.ownerId];
+    return (farm.id, farm.name, farm.lat, farm.long, farm.description, owner.name, farm.ownerId);
   }
 
   function addPlant(uint id, State _state, uint _date, int _lat, int _long, string memory _nursery, string memory variety, uint ownerId) public {
