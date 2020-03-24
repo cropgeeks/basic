@@ -1,7 +1,7 @@
 <template>
   <b-card no-body>
     <b-card-header header-tag="header" class="p-1">
-      <b-button @click="toggle_expanded" block href="#" v-b-toggle.inputs-accordion variant="light" class="text-left"><font-awesome-icon v-if="expanded === true" icon="angle-down" class="mr-2" key="down"/><font-awesome-icon v-if="expanded === false" icon="angle-right" class="mr-2" key="right"/>{{ heading }}</b-button>
+      <b-button @click="toggle_expanded" block href="#" v-b-toggle.inputs-accordion variant="light" class="text-left"><font-awesome-icon v-if="expanded === true" icon="angle-down" class="mr-2" key="down"/><font-awesome-icon v-if="expanded === false" icon="angle-right" class="mr-2" key="right"/>{{ heading }}<b-badge pill variant="primary" class="ml-3">{{ orders.length }}</b-badge></b-button>
     </b-card-header>
     <b-collapse id="inputs-accordion" accordion="my-accordion">
       <b-card-body> 
