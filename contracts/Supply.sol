@@ -15,7 +15,7 @@ contract Supply is Ownable {
 
   enum State { Propogated, Purchased, Shipped, Received, Planted, Harvested, Packed, Weighed, Stored, AtDistribution, Distributed, Sold }
 
-  enum OrderState { Ordered, Dispatched, Recevied }
+  enum OrderState { Placed, Dispatched, Recevied }
 
   struct Owner {
     uint id;
@@ -54,10 +54,12 @@ contract Supply is Ownable {
 
   struct Order {
     uint orderId;
-    address nursery;
-    address farmer;
+    uint nurseryId;
+    uint farmId;
+    uint quantity;
     uint[] plantIds;
     OrderState state;
+    uint updated;
   }
 
   Nursery[] public nurseries;
@@ -76,7 +78,8 @@ contract Supply is Ownable {
   event AddedNursery(uint nurseryId, string nurseryName, int lat, int long, string description, uint ownerId, string ownerName);
   event AddedFarm(uint farmId, string farmName, int lat, int long, string description, uint ownerId, string ownerName);
   event PropogatedByNursery(uint indexed plantId, Supply.State state, uint date, int lat, int long, string name, string variety, uint indexed ownerId);
-  event PurchasedByFarmer(uint indexed plantId, address plantOwner, string nurseryName, string farmName, uint date, int lat, int long);
+  event OrderPlaced(uint orderId, string nurseryName, string farmName, uint plantIds, OrderState state, uint placedDate);
+  event PurchasedByFarmer(uint indexed plantId, string nurseryName, string farmName, uint date, int lat, int long);
   event ShippedByNursery(uint indexed plantId, address plantOwner, uint date);
   event ReceivedByFarmer(uint indexed plantId, address plantOwner, uint date);
   event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date);
@@ -206,18 +209,28 @@ contract Supply is Ownable {
     return orders.length;
   }
 
-  function orderPlants(uint[] memory plantIds, address nurseryOwner, uint purchaseDate) public {
+  function getOrder(uint index) public view returns(uint, string memory, string memory, uint, OrderState, uint) {
+    Order memory order = orders[index];
+    Nursery memory nursery = nurseries[order.nurseryId];
+    Farm memory farm = farms[order.farmId];
+    return (order.orderId, nursery.name, farm.name, order.quantity, order.state, order.updated);
+  }
+
+  function orderPlants(uint quantity, uint nurseryId, uint farmId, uint purchaseDate) public {
     require(farmers.has(msg.sender), "address is not a farmer");
     uint orderId = orders.length;
-    Order memory order = Order(orderId, nurseryOwner, msg.sender, plantIds, OrderState.Ordered);
+    uint[] memory plantIds = new uint[](quantity);
+    Order memory order = Order(orderId, nurseryId, farmId, quantity, plantIds, OrderState.Placed, purchaseDate);
 
-    Farm memory farm = farmsByOwners[msg.sender];
-    Nursery memory nursery = nurseriesByOwners[nurseryOwner];
+    Farm memory farm = farms[farmId];
+    Nursery memory nursery = nurseries[nurseryId];
 
-    for (uint i = plantIds[0]; i < plantIds[0] + plantIds.length; i++) {
-      plants[i].state = State.Purchased;
-      emit PurchasedByFarmer(i, nurseryOwner, nursery.name, farm.name, purchaseDate, nursery.lat, nursery.long);
-    }
+    emit OrderPlaced(orderId, nursery.name, farm.name, quantity, OrderState.Placed, purchaseDate);
+
+    // for (uint i = plantIds[0]; i < plantIds[0] + plantIds.length; i++) {
+    //   plants[i].state = State.Purchased;
+    //   emit PurchasedByFarmer(i, nursery.name, farm.name, purchaseDate, nursery.lat, nursery.long);
+    // }
 
     orders.push(order);
   }

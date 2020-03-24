@@ -70,6 +70,14 @@ const router = new Router({
       }
     },
     {
+      path: '/farms/:farmId',
+      name: 'farm',
+      component: () => import('./views/Farm.vue'),
+      meta: {
+        title: 'BASIC - Farm',
+      }
+    },
+    {
       path: '/plants',
       name: 'plants',
       component: () => import('./views/Plants.vue'),
