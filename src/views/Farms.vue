@@ -1,75 +1,62 @@
 <template>
-  <div class="container container-top">
-    <b-container>
-      <h1>Farms</h1>
-      <div class="row">
-        <div v-for="nursery in nurseries" v-bind:key="nursery.id" class="col-md-3 col-6 my-1">
-          <div class="card h-100">
-          <div class="card-body">
-            <div class="card-title">{{ nursery.name }}</div>
-            <div class="card-text">
-              {{ nursery.description }}
-            </div>
-          </div>
-          <div class="card-footer">
-            <b-button @click="$router.push({ name: 'nursery', params: { nurseryId: nursery.id }})" variant="primary">Manage</b-button>
-          </div>
-        </div>
-      </div>
+  <b-container class="container-top">
+    <h1>Nurseries</h1>
+    <div class="row">
+      <b-card-group deck v-for="farm in farms" v-bind:key="farm.id">
+        <b-card
+          :title="farm.name"
+          img-src="~@/assets/raspberries-small.jpg"
+          :img-alt="farm.name"
+        >
+          <b-card-text>
+            {{ farm.description }}
+          </b-card-text>
+          <b-button @click="$router.push({ name: 'farm', params: { farmId: farm.id }})" variant="primary">
+            View
+          </b-button>
+        </b-card>
+      </b-card-group>
     </div>
-    </b-container>
-  </div>
+  </b-container>
 
 </template>
 
 <script>
 import web3 from '../util/getWeb3'
-import Supply from '../../build/contracts/Supply.json'
-import TruffleContract from 'truffle-contract'
 
 export default {
   name: 'home',
   data() {
     return {
-      w3: web3,
-      defaultAccount: null,
-      supplyContract: null,
-      nurseries: []
+      farms: [],
     }
   },
   mounted() {
-    web3.eth.getAccounts().then((acc) => {
-      this.defaultAccount = acc[0]
-      web3.eth.defaultAccount = acc[0]
-
-      this.supplyContract = TruffleContract(Supply)
-      
-      this.supplyContract.setProvider(this.w3.currentProvider)
-      this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-
+    web3.eth.getAccounts().then(() => {
       this.supplyContract.deployed().then((contract) => {
-        contract.getNurseryCount().then((count) => {
-          for (var i = 0; i < count; i++) {
-            contract.getNursery(i).then((nursery) => {
-              this.addNursery(nursery);
-            })
-          }
-        })
+        this.farms = this.getFarms(contract);
+        this.setupFarmAddedEvent(contract);
       })
     })
   },
   methods: {
-    addNursery: function(nursery) {
-      let n = {
-        id: nursery[0].toNumber(),
-        name: nursery[1].toString(),
-        lat: nursery[2].toNumber(),
-        long: nursery[3].toNumber(),
-        description: nursery[4].toString(),
-      }
+    // TODO: this code is duplicated from AddFarm page...think about best way
+    // to eliminate code duplication
+    // Setup the event listener which checks for the addition of new nurseries
+    setupFarmAddedEvent: function(contract) {
+      contract.AddedFarm().on('data', event => {
+        let farm = {
+          id: event.returnValues.farmId,
+          name: event.returnValues.farmName,
+          lat: event.returnValues.lat,
+          long: event.returnValues.long,
+          description: event.returnValues.description,
+          owner: event.returnValues.ownerName
+        }
 
-      this.nurseries.push(n);
-    }
+        this.farms.push(farm);
+      });
+    },
   }
 }
 </script>

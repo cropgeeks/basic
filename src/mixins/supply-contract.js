@@ -101,6 +101,25 @@ export default {
         }
       })
       return owners;
+    },
+    getOrders: function(contract) {
+      const orders = [];
+      contract.getOrderCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getOrder(i).then((order) => {
+            let o = {
+              id: order[0].toNumber(),
+              nurseryName: order[1].toString(),
+              farmName: order[2].toString(),
+              quantity: order[3].toNumber(),
+              state: order[4].toNumber(),
+              lastUpdated: new Date(order[5].toNumber() * 1000)
+            }
+            orders.push(o);
+          })
+        }
+      })
+      return orders;
     }
   }
 }

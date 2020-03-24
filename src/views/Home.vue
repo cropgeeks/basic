@@ -20,134 +20,6 @@
           <p>Nursery: {{ plant.nursery }}</p>
         </b-list-group-item>
       </b-list-group>
-      <!-- <h1>Add farm</h1>
-      <b-form @submit="onFarmSubmit" @reset="onFarmReset" v-if="show">
-        <b-row>
-          <b-col>
-            <label for="farmId">
-              Farm name
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="farmId"
-              v-model="form.farmId"
-              type="text"
-              placeholder="Invergowrie"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="farmAddress">
-              Farm account address
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="farmAddress"
-              v-model="form.farmAddress"
-              type="text"
-              placeholder="0x..."
-            />
-          </b-col>
-        </b-row>
-        <b-button type="submit" variant="primary">Submit</b-button>
-        <b-button type="reset" variant="secondary">Reset</b-button>
-      </b-form> -->
-      <!-- <h1>Add plant</h1>
-      <b-form @submit="onSubmit" @reset="onReset" v-if="show">
-        <b-row>
-          <b-col>
-            <label for="id">
-              ID
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="id"
-              v-model="form.id"
-              type="number"
-              placeholder="ID"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="state">
-              State
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-select
-              id="state"
-              v-model="form.state"
-              :options="states"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="date">
-              Planted date
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="date"
-              v-model="form.date"
-              type="date"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="latitude">
-              Latitude
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="latitude"
-              v-model="form.latitude"
-              type="number"
-              placeholder="56"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="longitude">
-              Longitude
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="longitude"
-              v-model="form.longitude"
-              type="number"
-              placeholder="3"
-            />
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
-            <label for="nursery">
-              Nursery
-            </label>
-          </b-col>
-          <b-col sm="9">
-            <b-form-input
-              id="nursery"
-              v-model="form.nursery"
-              type="text"
-              placeholder="Nursery"
-            />
-          </b-col>
-        </b-row>
-        <b-button type="submit" variant="primary">Submit</b-button>
-        <b-button type="reset" variant="secondary">Reset</b-button>
-      </b-form> -->
     </b-container>
   </div>
 
@@ -155,24 +27,11 @@
 
 <script>
 import web3 from '../util/getWeb3'
-import Supply from '../../build/contracts/Supply.json'
-import TruffleContract from 'truffle-contract'
 
 export default {
   name: 'home',
   data() {
     return {
-      w3: web3,
-      defaultAccount: null,
-      supplyContract: null,
-      form: {
-        id: null,
-        state: null,
-        latitude: null,
-        longitude: null,
-        nursery: null,
-        date: null
-      },
       nurseries: [],
       plants: [],
       states: [
@@ -185,27 +44,7 @@ export default {
   },
   mounted() {
     web3.eth.getAccounts().then((acc) => {
-      this.defaultAccount = acc[0]
-      web3.eth.defaultAccount = acc[0]
-
-      this.supplyContract = TruffleContract(Supply)
-      
-      this.supplyContract.setProvider(this.w3.currentProvider)
-      this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
-
-    //   this.supplyContract.deployed().then((contract) => {
-    //     contract.getPlantCount().then((count) => {
-    //        for (var i =0; i < count; i++)
-    //         contract.getPlant(i).then((plant) => {
-    //           this.addPlant(plant)
-    //         })
-    //     })
-    //   })
       this.supplyContract.deployed().then((contract) => {
-        console.log(contract);
-        contract.isOwner().then((owner) => {
-          console.log(owner);
-        })
         contract.getNurseryCount().then((count) => {
           for (var i = 0; i < count; i++) {
             contract.getNursery(i).then((nursery) => {
@@ -239,37 +78,6 @@ export default {
 
       this.nurseries.push(n);
     },
-    onSubmit(evt) {
-      evt.preventDefault()
-      this.supplyContract.deployed().then((contract) => {
-        contract.addPlant(this.form.id, this.form.state, (new Date(this.form.date).getTime()/1000), this.form.latitude, this.form.longitude, this.form.nursery)
-      })
-    },
-    onReset(evt) {
-      evt.preventDefault()
-      // Reset our form values
-      this.form.id = null
-      this.form.state = null
-      this.form.date = null
-      this.form.latitude = null
-      this.form.longitude = null
-      this.form.nursery = null
-      this.form.selectedState = null
-      // Trick to reset/clear native browser form validation state
-      this.show = false
-      this.$nextTick(() => {
-        this.show = true
-      })
-    }
-    // onFarmSubmit(evt) {
-    //   evt.preventDefault()
-    //   this.supplyContract.deployed().then((contract) => {
-    //     contract.addActor(this.form.farmId, 1, this.form.farmAddress)
-    //   })
-    // },
-    // onFarmReset(evt) {
-
-    // }
   }
 }
 </script>
