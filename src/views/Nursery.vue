@@ -9,28 +9,30 @@
         <div class="row">
           <p>{{ nursery.description }}</p>
         </div>
-        <div v-if="isNurseryOwner">
-          <div class="row">
-            <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
-            <b-pagination
-              v-if="propogated.length > 0"
-              v-model="propCurrentPage"
-              :total-rows="propogated.length"
-              :per-page="propPerPage"
-              size="sm"
-            ></b-pagination>
-          </div>
-          <div class="row">
-            <b-table class="md-0" striped hover small bordered caption-top caption="Purcahsed &amp; Ready for dispatch" :items="purchased"></b-table>
-            <b-pagination
-              v-if="purchased.length > 0"
-              v-model="purchasedCurrentPage"
-              :total-rows="purchased.length"
-              :per-page="purchasedPerPage"
-              size="sm"
-            ></b-pagination>
-          </div>
+        <div class="row">
+          <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
+          <b-pagination
+            v-if="propogated.length > 0"
+            v-model="propCurrentPage"
+            :total-rows="propogated.length"
+            :per-page="propPerPage"
+            size="sm"
+          ></b-pagination>
         </div>
+        <!-- <div class="row">
+          <b-table class="md-0" striped hover small bordered caption-top caption="Purcahsed &amp; Ready for dispatch" :items="purchased"></b-table>
+          <b-pagination
+            v-if="purchased.length > 0"
+            v-model="purchasedCurrentPage"
+            :total-rows="purchased.length"
+            :per-page="purchasedPerPage"
+            size="sm"
+          ></b-pagination>
+        </div> -->
+        <orders-accordion :orders="placedOrders"
+                          :orderStates="orderStates"
+                          heading="Placed Orders"
+        ></orders-accordion>
         <b-button v-if="isNurseryOwner" v-b-modal.propogateModal class="float-left" variant="primary">Propogate plants</b-button>
         <b-modal id="propogateModal" title="Propogate plants" @ok="propogatePlants">
           <b-form>
@@ -50,14 +52,19 @@
 
 <script>
 import web3 from '../util/getWeb3'
+import OrdersAccordion from '../components/OrdersAccordion.vue'
 
 export default {
   name: 'home',
+  components: {
+    "orders-accordion": OrdersAccordion
+  },
   data() {
     return {
       nursery: null,
       plants: [],
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
+      orderStates: ['Placed', 'Dispatched', 'Received'],
       isNurseryOwner: false,
       isFarmer: false,
       quantity: 1,
@@ -66,7 +73,8 @@ export default {
       propPerPage: 10,
       propCurrentPage: 1,
       purchasedPerPage: 10,
-      purchasedCurrentPage: 1
+      purchasedCurrentPage: 1,
+      orders: []
     }
   },
   mounted() {
@@ -97,6 +105,8 @@ export default {
         })
 
         this.setupPlantPropogatedEvent(contract);
+
+        this.orders = this.getOrders(contract);
       })
     })
   },
@@ -104,11 +114,11 @@ export default {
     propogated: function() {
       return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Propogated');
     },
-    purchased: function() {
-      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Purchased');
-    },
     stock: function() {
       return this.propogated.length;
+    },
+    placedOrders: function() {
+      return this.orders.filter(order => order.nurseryName === this.nursery.name && this.orderStates[order.state] === 'Placed');
     }
   },
   methods: {
