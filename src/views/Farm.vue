@@ -19,11 +19,11 @@
             size="sm"
           ></b-pagination>
         </div>
-        <orders-accordion :orders="orders"
+        <orders-accordion :orders="placedOrders"
                           :orderStates="orderStates"
                           heading="Placed Orders"
         ></orders-accordion>
-        <b-button v-if="isFarmerOwner" v-b-modal.orderModal class="float-left mt-3" variant="primary">Order plants</b-button>
+        <b-button v-if="isFarmOwner" v-b-modal.orderModal class="float-left mt-3" variant="primary">Order plants</b-button>
         <b-modal id="orderModal" title="Order plants" @ok="orderPlants">
           <b-form>
             <b-form-group label="Nursery" label-for="nursery-select" label-align="left">
@@ -56,7 +56,7 @@ export default {
       plants: [],
       states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Stored', 'Planted'],
       orderStates: ['Placed', 'Dispatched', 'Received'],
-      isFarmerOwner: false,
+      isFarmOwner: false,
       plantedPerPage: 10,
       plantedCurrentPage: 1,
       nurseries: [],
@@ -68,23 +68,26 @@ export default {
   },
   mounted() {
     web3.eth.getAccounts().then(() => {
-      this.supplyContract.deployed().then((contract) => {
+      this.farmManager.deployed().then((contract) => {
         this.initFarm(contract);
-        this.initFarmPlants(contract);
 
-        this.isFarmOwner = false;
-
-        // Check if the selected account is the nursery owner
-        contract.isFarmer().then(isFarmer => {
-          this.isFarmerOwner = isFarmer;
+        contract.isFarmOwner(this.$route.params.farmId).then(isFarmer => {
+          this.isFarmOwner = isFarmer;
         })
 
-        this.nurseries = this.getNurseries(contract);
-        this.orders = this.getOrders(contract);
-
         this.setupOrderPlacedEvent(contract);
+      })
 
-        // this.setupPlantPropogatedEvent(contract);
+      this.nurseryManager.deployed().then((contract) => {
+        this.nurseries = this.getNurseries(contract);
+      })
+
+      this.orderManager.deployed().then((contract) => {
+        this.orders = this.getOrders(contract);
+      })
+
+      this.supplyContract.deployed().then((contract) => {
+        this.initFarmPlants(contract);
       })
     })
   },
@@ -108,11 +111,17 @@ export default {
       } else {
         return this.plants.filter(plant => plant.nursery === this.selectedNursery.name && plant.state === 'Propogated').length;
       }
+    },
+    placedOrders: function() {
+      return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Placed');
+    },
+    receivedOrders: function() {
+      return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Received');
     }
   },
   methods: {
     orderPlants: function() {
-      this.supplyContract.deployed().then((contract) => {
+      this.orderManager.deployed().then((contract) => {
         // Generate a timestamp to mark the order with
         let date = (new Date()).getTime();
         let timestamp = Math.floor(date / 1000);
@@ -155,7 +164,7 @@ export default {
               long: plant[4].toNumber(),
               nursery: plant[5].toString(),
               variety: plant[6].toString(),
-              ownerId: plant[7].toNumber()
+              ownerAddress: plant[7].toString()
             }
             this.plants.push(p);
           })
@@ -180,7 +189,7 @@ export default {
     },
     toggle_expanded: function() {
       this.expanded = !this.expanded
-    }
+    },
   }
 }
 </script>

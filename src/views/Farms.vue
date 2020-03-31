@@ -1,6 +1,6 @@
 <template>
   <b-container class="container-top">
-    <h1>Nurseries</h1>
+    <h1>Farms</h1>
     <div class="row">
       <b-card-group deck v-for="farm in farms" v-bind:key="farm.id">
         <b-card
@@ -33,7 +33,7 @@ export default {
   },
   mounted() {
     web3.eth.getAccounts().then(() => {
-      this.supplyContract.deployed().then((contract) => {
+      this.farmManager.deployed().then((contract) => {
         this.farms = this.getFarms(contract);
         this.setupFarmAddedEvent(contract);
       })
