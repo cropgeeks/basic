@@ -51,14 +51,13 @@ export default {
     }
   },
   mounted() {
-     web3.eth.getAccounts().then(() => {
-      // Specific setup of elements for this page
-      this.supplyContract.deployed().then((contract) => {
-        this.nurseries = this.getNurseries(contract);
-        this.owners = this.getNurseryOwners(contract);
-        this.setupNurseryAddedEvent(contract);
+    web3.eth.getAccounts().then(() => {
+      this.nurseryManager.deployed().then((contract) => {
+      this.nurseries = this.getNurseries(contract);
+      this.setupNurseryAddedEvent(contract);
+      this.owners = this.getNurseryOwners(contract);
       })
-     })
+    })
   },
   computed: {
     options: function() {
@@ -71,9 +70,9 @@ export default {
   },
   methods: {
     addNursery: function() {
-      this.supplyContract.deployed().then((contract) => {
+      this.nurseryManager.deployed().then((contract) => {
         //string memory name, int lat, int long, string memory nurseryDescription, address nurseryOwner
-        contract.addNursery(this.nurseryName, this.nurseryLat, this.nurseryLong, this.nurseryDesc, this.nurseryOwner.id);
+        contract.addNursery(this.nurseryName, this.nurseryLat, this.nurseryLong, this.nurseryDesc, this.nurseryOwner.address);
       }).catch(error => {
         // TODO: Flag to the user in some useful way
         console.log(error);

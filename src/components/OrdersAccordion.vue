@@ -16,6 +16,8 @@
               <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
               <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
               <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
+              <b-button v-if="nursery_owner && placed" @click="dispatch_order(order)">Dispatch Order</b-button>
+              <b-button v-if="farm_owner && dispatched">Receive Order</b-button>
             </b-card>
           </b-card-group>
         </div>
@@ -34,12 +36,26 @@ export default {
   props: {
     orders: Array,
     orderStates: Array,
-    heading: String
+    heading: String,
+    nursery_owner: Boolean,
+    farm_owner: Boolean
   },
 
   methods: {
      toggle_expanded: function() {
       this.expanded = !this.expanded
+    },
+    placed: function() {
+      return this.orderStates[this.order.state] === 'Placed';
+    },
+    dispatched: function() {
+      return this.orderStates[this.order.state] === 'Dispatched';
+    },
+    received: function() {
+      return this.orderStates[this.order.state] === 'Recevied';
+    },
+    dispatch_order: function(order) {
+      this.$emit('dispatch_order', order);
     }
   }
 };

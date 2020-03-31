@@ -9,28 +9,39 @@
         <div class="row">
           <p>{{ nursery.description }}</p>
         </div>
-        <div v-if="isNurseryOwner">
-          <div class="row">
-            <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
-            <b-pagination
-              v-if="propogated.length > 0"
-              v-model="propCurrentPage"
-              :total-rows="propogated.length"
-              :per-page="propPerPage"
-              size="sm"
-            ></b-pagination>
-          </div>
-          <div class="row">
-            <b-table class="md-0" striped hover small bordered caption-top caption="Purcahsed &amp; Ready for dispatch" :items="purchased"></b-table>
-            <b-pagination
-              v-if="purchased.length > 0"
-              v-model="purchasedCurrentPage"
-              :total-rows="purchased.length"
-              :per-page="purchasedPerPage"
-              size="sm"
-            ></b-pagination>
-          </div>
+        <div class="row">
+          <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
+          <b-pagination
+            v-if="propogated.length > 0"
+            v-model="propCurrentPage"
+            :total-rows="propogated.length"
+            :per-page="propPerPage"
+            size="sm"
+          ></b-pagination>
         </div>
+        <!-- <div class="row">
+          <b-table class="md-0" striped hover small bordered caption-top caption="Purcahsed &amp; Ready for dispatch" :items="purchased"></b-table>
+          <b-pagination
+            v-if="purchased.length > 0"
+            v-model="purchasedCurrentPage"
+            :total-rows="purchased.length"
+            :per-page="purchasedPerPage"
+            size="sm"
+          ></b-pagination>
+        </div> -->
+        <orders-accordion :orders="placedOrders"
+                          :orderStates="orderStates"
+                          heading="Placed Orders"
+                          :nursery_owner="isNurseryOwner"
+                          :farm_owner="false"
+                          @dispatch_order="dispatchOrder"
+        ></orders-accordion>
+        <orders-accordion :orders="dispatchedOrders"
+                          :orderStates="orderStates"
+                          heading="Dispatched Orders"
+                          :nursery_owner="isNurseryOwner"
+                          :farm_owner="false"
+        ></orders-accordion>
         <b-button v-if="isNurseryOwner" v-b-modal.propogateModal class="float-left" variant="primary">Propogate plants</b-button>
         <b-modal id="propogateModal" title="Propogate plants" @ok="propogatePlants">
           <b-form>
@@ -50,23 +61,28 @@
 
 <script>
 import web3 from '../util/getWeb3'
+import OrdersAccordion from '../components/OrdersAccordion.vue'
 
 export default {
   name: 'home',
+  components: {
+    "orders-accordion": OrdersAccordion
+  },
   data() {
     return {
       nursery: null,
       plants: [],
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
+      orderStates: ['Placed', 'Dispatched', 'Received'],
       isNurseryOwner: false,
-      isFarmer: false,
       quantity: 1,
       variety: null,
       propQuantity: null,
       propPerPage: 10,
       propCurrentPage: 1,
       purchasedPerPage: 10,
-      purchasedCurrentPage: 1
+      purchasedCurrentPage: 1,
+      orders: []
     }
   },
   mounted() {
@@ -79,23 +95,22 @@ export default {
       //   this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
       // });
 
-      this.supplyContract.deployed().then((contract) => {
+      this.nurseryManager.deployed().then((contract) => {
         this.initNursery(contract);
-        this.initNurseryPlants(contract);
-
-        this.isNurseryOwner = false;
-        this.isFarmer = false;
 
         // Check if the selected account is the nursery owner
-        contract.isNurseryOwner().then(isOwner => {
+        contract.isNurseryOwner(this.$route.params.nurseryId).then(isOwner => {
           this.isNurseryOwner = isOwner;
         })
+      })
 
-        // Check if the selected account is the nursery owner
-        contract.isFarmer().then(isFarmer => {
-          this.isFarmer = isFarmer;
-        })
+      this.orderManager.deployed().then((contract) => {
+        this.orders = this.getOrders(contract);
+        this.setupOrderDispatchedEvent(contract);
+      })
 
+      this.supplyContract.deployed().then((contract) => {
+        this.initNurseryPlants(contract);
         this.setupPlantPropogatedEvent(contract);
       })
     })
@@ -104,11 +119,14 @@ export default {
     propogated: function() {
       return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Propogated');
     },
-    purchased: function() {
-      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Purchased');
-    },
     stock: function() {
       return this.propogated.length;
+    },
+    placedOrders: function() {
+      return this.orders.filter(order => order.nurseryName === this.nursery.name && this.orderStates[order.state] === 'Placed');
+    },
+    dispatchedOrders: function() {
+      return this.orders.filter(order => order.nurseryName === this.nursery.name && this.orderStates[order.state] === 'Dispatched');
     }
   },
   methods: {
@@ -116,23 +134,12 @@ export default {
       this.supplyContract.deployed().then((contract) => {
         let date = (new Date()).getTime();
         let timestamp = Math.floor(date / 1000);
-        contract.propogatePlants(timestamp, this.variety, this.propQuantity);
+        contract.propogatePlants(timestamp, this.variety, this.propQuantity, this.nursery.name, this.nursery.lat, this.nursery.long, this.nursery.ownerAddress);
       }).catch(error => {
         console.log(error);
       }).then(() => {
         this.variety = null;
         this.propQuantity = null;
-      })
-    },
-    orderPlants: function() {
-      const ordered = this.propogated.slice(0, this.quantity).map(p => p.id);
-      this.propogated = this.propogated.slice(this.quantity);
-
-      let date = (new Date()).getTime();
-      let timestamp = Math.floor(date / 1000);
-
-      this.supplyContract.deployed().then((contract) => {
-        contract.orderPlants(ordered, this.nursery.address, timestamp)
       })
     },
     initNursery: function(contract) {
@@ -145,7 +152,7 @@ export default {
           long: n[3].toNumber(),
           description: n[4].toString(),
           ownerName: n[5].toString(),
-          ownerId: n[6].toString()
+          ownerAddress: n[6].toString()
         }
       })
     },
@@ -162,7 +169,7 @@ export default {
               long: plant[4].toNumber(),
               nursery: plant[5].toString(),
               variety: plant[6].toString(),
-              ownerId: plant[7].toNumber()
+              ownerAddress: plant[7].toString()
             }
             this.plants.push(p);
           })
@@ -179,13 +186,38 @@ export default {
           long: event.returnValues.long,
           nursery: event.returnValues.name,
           variety: event.returnValues.variety,
-          ownerId: event.returnValues.ownerId
+          ownerAddress: event.returnValues.ownerAddress
         }
         if (p.ownerId === this.nursery.ownerId) {
           this.propogated.push(p);
         }
       })
-    }
+    },
+    dispatchOrder: function(order) {
+      this.orderManager.deployed().then((contract) => {
+        const ordered = this.propogated.slice(0, this.quantity).map(p => p.id);
+
+        let date = (new Date()).getTime();
+        let timestamp = Math.floor(date / 1000);
+
+        contract.dispatchOrder(order.id, ordered, timestamp, order.farmName, this.nursery.name, this.nursery.lat, this.nursery.long);
+      })
+    },
+     // Setup the event listener which checks for the addition of new farms
+    setupOrderDispatchedEvent: function(contract) {
+      contract.OrderDispatched().on('data', event => {
+        let o = {
+          id: event.returnValues.orderId, 
+          nurseryName: event.returnValues.nurseryName, 
+          farmName: event.returnValues.farmName, 
+          quantity: event.returnValues.quantity, 
+          state: this.orderStates[event.returnValues.state], 
+          lastUpdated: new Date(event.returnValues.placedDate * 1000)
+        }
+
+        this.orders.push(o);
+      });
+    },
   }
 }
 </script>

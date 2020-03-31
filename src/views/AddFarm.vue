@@ -53,7 +53,7 @@ export default {
   mounted() {
      web3.eth.getAccounts().then(() => {
       // Specific setup of elements for this page
-      this.supplyContract.deployed().then((contract) => {
+      this.farmManager.deployed().then((contract) => {
         this.farms = this.getFarms(contract);
         this.owners = this.getFarmOwners(contract);
         this.setupFarmAddedEvent(contract);
@@ -71,8 +71,8 @@ export default {
   },
   methods: {
     addFarm: function() {
-      this.supplyContract.deployed().then((contract) => {
-        contract.addFarm(this.farmName, this.farmLat, this.farmLong, this.farmDesc, this.farmOwner.id);
+      this.farmManager.deployed().then((contract) => {
+        contract.addFarm(this.farmName, this.farmLat, this.farmLong, this.farmDesc, this.farmOwner.address);
       }).catch(error => {
         // TODO: Flag to the user in some useful way
         console.log(error);

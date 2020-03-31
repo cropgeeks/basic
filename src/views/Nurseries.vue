@@ -33,7 +33,7 @@ export default {
   },
   mounted() {
     web3.eth.getAccounts().then(() => {
-      this.supplyContract.deployed().then((contract) => {
+      this.nurseryManager.deployed().then((contract) => {
         this.nurseries = this.getNurseries(contract);
         this.setupNurseryAddedEvent(contract);
       })

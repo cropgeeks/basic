@@ -1,5 +1,8 @@
 import web3 from '../util/getWeb3'
 import Supply from '../../build/contracts/Supply.json'
+import NurseryManager from '../../build/contracts/NurseryManager.json'
+import FarmManager from '../../build/contracts/FarmManager.json'
+import OrderManager from '../../build/contracts/OrderManager.json'
 import TruffleContract from 'truffle-contract'
 
 export default {
@@ -8,7 +11,10 @@ export default {
       w3: web3,
       defaultAccount: null,
       supplyContract: null,
-      isAdmin: false
+      nurseryManager: null,
+      orderManager: null,
+      isAdmin: false,
+      roles: [ 'Nursery', 'Farmer' ]
     }
   },
   mounted: function() {
@@ -19,6 +25,18 @@ export default {
       this.supplyContract = TruffleContract(Supply)
       this.supplyContract.setProvider(this.w3.currentProvider)
       this.supplyContract.defaults({from: this.w3.eth.defaultAccount})
+
+      this.nurseryManager = TruffleContract(NurseryManager);
+      this.nurseryManager.setProvider(this.w3.currentProvider)
+      this.nurseryManager.defaults({from: this.w3.eth.defaultAccount})
+
+      this.farmManager = TruffleContract(FarmManager);
+      this.farmManager.setProvider(this.w3.currentProvider)
+      this.farmManager.defaults({from: this.w3.eth.defaultAccount})
+
+      this.orderManager = TruffleContract(OrderManager);
+      this.orderManager.setProvider(this.w3.currentProvider)
+      this.orderManager.defaults({from: this.w3.eth.defaultAccount})
 
       // We want the admin check to occur on every page load
       this.supplyContract.deployed().then((contract) => {
@@ -57,9 +75,8 @@ export default {
         for (var i = 0; i < count; i++) {
           contract.getNurseryOwner(i).then((owner) => {
             let n = {
-              id: owner[0].toNumber(),
-              name: owner[1].toString(),
-              address: owner[2].toString()
+              name: owner[0].toString(),
+              address: owner[1]
             }
             owners.push(n);
           })
@@ -92,9 +109,8 @@ export default {
         for (var i = 0; i < count; i++) {
           contract.getFarmOwner(i).then((owner) => {
             let n = {
-              id: owner[0].toNumber(),
-              name: owner[1].toString(),
-              address: owner[2].toString()
+              name: owner[0].toString(),
+              address: owner[1].toString()
             }
             owners.push(n);
           })

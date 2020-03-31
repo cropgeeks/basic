@@ -50,49 +50,54 @@ export default {
   mounted() {
     web3.eth.getAccounts().then(() => {
       // Specific setup of elements for this page
-      this.supplyContract.deployed().then((contract) => {
+      this.nurseryManager.deployed().then((contract) => {
         this.initNurseryOwners(contract);
         this.setupNurseryOwnerEvent(contract);
+      });
+
+      this.farmManager.deployed().then((contract) => {
         this.initFarmOwners(contract);
         this.setupFarmOwnerEvent(contract);
-      })
+      });
     })
   },
   methods: {
     // Called from the modal launched via the add account button
     addAccount() {
-      this.supplyContract.deployed().then((contract) => {
-        // Try to add an account of the selected type
-        if (this.selectedRole === "Nursery") {
+      // Try to add an account of the selected type
+      if (this.selectedRole === "Nursery") {
+        this.nurseryManager.deployed().then((contract) => {
           contract.addNurseryOwner(this.name, this.account);
-        } else if (this.selectedRole === "Farmer") {
+        }).catch(error => {
+          // TODO: Flag to the user in some useful way
+          console.log(error);
+        }).then(() => {
+          // We want to blank out our form fields whether we succeeded or failed
+          // hence the placement in a then after the catch
+          this.account = null;
+          this.selectedRole = null;
+          this.name = null;
+        });
+      }
+
+      if (this.selectedRole === "Farmer") {
+        this.farmManager.deployed().then((contract) => {
           contract.addFarmOwner(this.name, this.account);
-        }
-      }).catch(error => {
-        // TODO: Flag to the user in some useful way
-        console.log(error);
-      }).then(() => {
-        // We want to blank out our form fields whether we succeeded or failed
-        // hence the placement in a then after the catch
-        this.account = null;
-        this.selectedRole = null;
-        this.name = null;
-      })
+        }).catch(error => {
+          // TODO: Flag to the user in some useful way
+          console.log(error);
+        }).then(() => {
+          // We want to blank out our form fields whether we succeeded or failed
+          // hence the placement in a then after the catch
+          this.account = null;
+          this.selectedRole = null;
+          this.name = null;
+        });
+      }
     },
      // Load any existing nursery owners into an array with backs a table
     initNurseryOwners: function(contract) {
-      contract.getNurseryOwnerCount().then((count) => {
-        for (var i =0; i < count; i++) {
-          contract.getNurseryOwner(i).then((nurseryOwner) => {
-            let n = {
-              name: nurseryOwner[0].toString(),
-              address: nurseryOwner[1].toString()
-            }
-
-            this.nurseryOwners.push(n);
-          })
-        }
-      })
+      this.nurseryOwners = this.getNurseryOwners(contract);
     },
     // Setup the event listener which checks for the addition of new nursery owners
     setupNurseryOwnerEvent: function(contract) {
@@ -107,18 +112,7 @@ export default {
     },
     // Load any existing farm owners into an array with backs a table
     initFarmOwners: function(contract) {
-      contract.getFarmOwnerCount().then((count) => {
-        for (var i =0; i < count; i++) {
-          contract.getFarmOwner(i).then((farmOwner) => {
-            let n = {
-              name: farmOwner[0].toString(),
-              address: farmOwner[1].toString()
-            }
-
-            this.farmOwners.push(n);
-          })
-        }
-      })
+      this.farmOwners = this.getFarmOwners(contract);
     },
     // Setup the event listener which checks for the addition of new farm owners
     setupFarmOwnerEvent: function(contract) {
