@@ -62,6 +62,22 @@ const router = new Router({
       }
     },
     {
+      path: '/nurseries/:nurseryId/propogated',
+      name: 'nursery-propogated',
+      component: () => import('./views/NurseryPlanted.vue'),
+      meta: {
+        title: 'BASIC - Nursery (Propogated)',
+      }
+    },
+    {
+      path: '/nurseries/:nurseryId/orders',
+      name: 'nursery-orders',
+      component: () => import('./views/NurseryOrders.vue'),
+      meta: {
+        title: 'BASIC - Nursery (Orders)',
+      }
+    },
+    {
       path: '/farms',
       name: 'farms',
       component: () => import('./views/Farms.vue'),
