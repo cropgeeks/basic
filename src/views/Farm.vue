@@ -42,13 +42,9 @@
 
 <script>
 import web3 from '../util/getWeb3'
-import OrdersAccordion from '../components/OrdersAccordion.vue'
 
 export default {
   name: 'home',
-   components: {
-    "orders-accordion": OrdersAccordion
-  },
   data() {
     return {
       farm: null,
