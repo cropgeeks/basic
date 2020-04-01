@@ -75,7 +75,6 @@ export default {
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
       orderStates: ['Placed', 'Dispatched', 'Received'],
       isNurseryOwner: false,
-      quantity: 1,
       variety: null,
       propQuantity: null,
       propPerPage: 10,
@@ -195,7 +194,7 @@ export default {
     },
     dispatchOrder: function(order) {
       this.orderManager.deployed().then((contract) => {
-        const ordered = this.propogated.slice(0, this.quantity).map(p => p.id);
+        const ordered = this.propogated.slice(0, order.quantity).map(p => p.id);
 
         let date = (new Date()).getTime();
         let timestamp = Math.floor(date / 1000);

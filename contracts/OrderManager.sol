@@ -4,21 +4,23 @@ import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./SupplyDataTypes.sol";
 import "./FarmManager.sol";
 import "./NurseryManager.sol";
+import "./Supply.sol";
 
 contract OrderManager is Ownable {
   NurseryManager nurseryManager;
   FarmManager farmManager;
+  Supply supply;
 
   SupplyDataTypes.Order[] public orders;
 
   event OrderPlaced(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint placedDate);
   event OrderDispatched(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint dispatchedDate);
-  event PurchasedByFarmer(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
-  event DispatchedByNursery(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
+  event OrderReceived(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint receivedDate);
 
-  constructor(address nurseryManagerAddress, address farmManagerAddress) public {
+  constructor(address nurseryManagerAddress, address farmManagerAddress, address supplyAddress) public {
     nurseryManager = NurseryManager(nurseryManagerAddress);
     farmManager = FarmManager(farmManagerAddress);
+    supply = Supply(supplyAddress);
   }
 
   function getOrderCount() public view returns(uint) {
@@ -49,12 +51,28 @@ contract OrderManager is Ownable {
     SupplyDataTypes.Order storage order = orders[orderId];
     order.state = SupplyDataTypes.OrderState.Dispatched;
     order.updated = dispatchedDate;
+    order.plantIds = plantIds;
 
     emit OrderDispatched(order.orderId, nurseryName, farmName, order.quantity, order.state, order.updated);
 
-    for (uint i = plantIds[0]; i < plantIds[0] + plantIds.length; i++) {
-      emit PurchasedByFarmer(i, order.orderId, order.nurseryId, nurseryName, order.farmId, farmName, dispatchedDate, lat, long);
-      emit DispatchedByNursery(i, order.orderId, order.nurseryId, nurseryName, order.farmId, farmName, dispatchedDate, lat, long);
+    for (uint i = 0; i < plantIds.length; i++) {
+      supply.dispatchedByNursery(plantIds[i], order.orderId, order.nurseryId, nurseryName, order.farmId, farmName, dispatchedDate, lat, long);
+    }
+  }
+
+  function receiveOrder(uint orderId, uint receivedDate) public {
+    SupplyDataTypes.Order storage order = orders[orderId];
+    order.state = SupplyDataTypes.OrderState.Received;
+    order.updated = receivedDate;
+
+    string memory farmName = farmManager.getFarmName(order.farmId);
+    string memory nurseryName = nurseryManager.getNurseryName(order.nurseryId);
+    address farmAddress = farmManager.getFarmAddress(order.farmId);
+
+    emit OrderReceived(order.orderId, nurseryName, farmName, order.quantity, order.state, order.updated);
+
+    for (uint i = 0; i < order.plantIds.length; i++) {
+      supply.receivePlant(order.plantIds[i], farmAddress, order.updated);
     }
   }
 }

@@ -6,11 +6,10 @@ var Supply = artifacts.require("./Supply.sol");
 
 module.exports = function(deployer) {
   deployer.deploy(SupplyDataTypes);
-  deployer.deploy(NurseryManager)
+  deployer.deploy(Supply).then(() => Supply.deployed())
+    .then(() => deployer.deploy(NurseryManager))
     .then(() => NurseryManager.deployed())
     .then(() => deployer.deploy(FarmManager))
     .then(() => FarmManager.deployed())
-    .then(() => deployer.deploy(OrderManager, NurseryManager.address, FarmManager.address));
-  
-  deployer.deploy(Supply);
+    .then(() => deployer.deploy(OrderManager, NurseryManager.address, FarmManager.address, Supply.address));
 };
