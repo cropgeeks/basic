@@ -10,31 +10,44 @@
           <p>{{ farm.description }}</p>
         </div>
         <div class="row">
-          <b-card-group deck>
-            <b-card
-              title="Planted"
-              img-src="~@/assets/plantnursery.jpg"
-              img-alt="plant nursery"
-            >
-              <b-button @click="$router.push({ name: 'farm-planted', params: { farmId: farm.id }})" varaint="primary">View planted</b-button>
-            </b-card>
-            <b-card
-              title="Orders"
-              img-src="~@/assets/raspberries-small.jpg"
-              img-alt="orders"
-            >
-              <b-button @click="$router.push({ name: 'farm-orders', params: { farmId: farm.id }})" varaint="primary">View orders</b-button>
-            </b-card>
-            <b-card
-              title="Storage"
-              img-src="~@/assets/raspberry-punnets.jpg"
-              img-alt="storage"
-            >
-              <b-button @click="$router.push({ name: 'farm-storage', params: { farmId: farm.id }})" varaint="primary">View store</b-button>
-            </b-card>
-          </b-card-group>
+          <b-button v-if="isFarmOwner" v-b-modal.orderModal class="float-left mt-3" variant="primary">Order plants</b-button>
         </div>
+        <div class="row mt-3">
+          <b-form inline>
+            <b-form-group label="Order status:" label-for="order-select">
+              <b-form-select id="order-select" size="sm" :options="orderStates" v-model="selectedOrderState"></b-form-select>
+            </b-form-group>
+          </b-form>
+        </div>
+
+        <b-modal id="orderModal" title="Order plants" @ok="orderPlants">
+          <b-form>
+            <b-form-group label="Nursery" label-for="nursery-select" label-align="left">
+              <b-form-select id="nursery-select" size="sm" :options="nurseryOptions" v-model="selectedNursery"></b-form-select>
+            </b-form-group>
+            <b-form-group label="Order quantity" label-for="nursery-stock" label-align="left">
+              <b-form-text>Current stock: {{ nurseryStock }}</b-form-text>
+              <b-input id="orderQuantity" size="sm" placeholder="0" type="number" min="0" :max="nurseryStock" v-model="orderQuantity"/>
+            </b-form-group>
+          </b-form>
+        </b-modal>
       </div>
+    </div>
+
+    <div class="row mt-3" v-for="order in displayOrders" v-bind:key="order.id">
+      <!-- <b-card-group v-for="order in displayOrders" v-bind:key="order.id" class="ml-3"> -->
+        <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
+          <template v-slot:header class="m-0">
+            <h6 class="mb-0">Order - {{ order.id }}</h6>
+          </template>
+          <b-card-text class="mb-0">Nursery: {{ order.nurseryName }}</b-card-text>
+          <b-card-text class="mb-0">Farm: {{ order.farmName }}</b-card-text>
+          <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
+          <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
+          <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
+          <b-button v-if="isFarmOwner && orderStates[order.state] === 'Dispatched'" @click="receive_order(order)">Receive Order</b-button>
+        </b-card>
+      <!-- </b-card-group> -->
     </div>
   </b-container>
 
@@ -42,19 +55,16 @@
 
 <script>
 import web3 from '../util/getWeb3'
-import OrdersAccordion from '../components/OrdersAccordion.vue'
 
 export default {
   name: 'home',
-   components: {
-    "orders-accordion": OrdersAccordion
-  },
   data() {
     return {
       farm: null,
       plants: [],
       states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Stored', 'Planted'],
       orderStates: ['Placed', 'Dispatched', 'Received'],
+      selectedOrderState: 'Placed',
       isFarmOwner: false,
       plantedPerPage: 10,
       plantedCurrentPage: 1,
@@ -116,6 +126,9 @@ export default {
     },
     receivedOrders: function() {
       return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Received');
+    },
+    displayOrders: function() {
+       return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === this.selectedOrderState);
     }
   },
   methods: {
@@ -186,8 +199,13 @@ export default {
         this.orders.push(o);
       });
     },
-    toggle_expanded: function() {
-      this.expanded = !this.expanded
+    receive_order: function(order) {
+      this.orderManager.deployed().then((contract) => {
+        let date = (new Date()).getTime();
+        let timestamp = Math.floor(date / 1000);
+        
+        contract.receiveOrder(order.id, timestamp);
+      })
     },
   }
 }

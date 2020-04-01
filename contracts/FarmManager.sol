@@ -61,4 +61,9 @@ contract FarmManager is Ownable {
     SupplyDataTypes.Farm memory farm = farms[index];
     return (farm.name);
   }
+
+  function getFarmAddress(uint index) public view returns(address) {
+    SupplyDataTypes.Farm memory farm = farms[index];
+    return (farm.ownerAddress);
+  }
 }

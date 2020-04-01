@@ -8,14 +8,12 @@ import "./OrderManager.sol";
 import "./SupplyDataTypes.sol";
 
 contract Supply is Ownable {
-  Roles.Role private farmers;
-
   // Dynamically sized plant array
   SupplyDataTypes.Plant[] public plants;
 
-  SupplyDataTypes.Order[] public orders;
-
   event PropogatedByNursery(uint indexed plantId, SupplyDataTypes.State state, uint date, int lat, int long, string name, string variety, address indexed ownerAddress);
+  event PurchasedByFarmer(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
+  event DispatchedByNursery(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
   event ReceivedByFarmer(uint indexed plantId, address plantOwner, uint date);
   event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date);
 
@@ -50,6 +48,14 @@ contract Supply is Ownable {
     }
   }
 
+  function dispatchedByNursery(uint plantId, uint orderId, uint nurseryId, string memory nurseryName, uint farmId, string memory farmName, uint dispatchedDate, int lat, int long) public {
+    SupplyDataTypes.Plant storage plant = plants[plantId];
+    plant.state = SupplyDataTypes.State.Shipped;
+
+    emit PurchasedByFarmer(plantId, orderId, nurseryId, nurseryName, farmId, farmName, dispatchedDate, lat, long);
+    emit DispatchedByNursery(plantId, orderId, nurseryId, nurseryName, farmId, farmName, dispatchedDate, lat, long);
+  }
+
   function addPlant(uint id, SupplyDataTypes.State state, uint date, int lat, int long, string memory nursery, string memory variety, address ownerAddress) public {
     SupplyDataTypes.Plant memory plant = SupplyDataTypes.Plant(id, state, date, lat, long, nursery, variety, ownerAddress);
     plants.push(plant);
@@ -63,6 +69,14 @@ contract Supply is Ownable {
   function getPlant(uint index) public view returns(uint, SupplyDataTypes.State, uint, int, int, string memory, string memory, address ownerAddress) {
     SupplyDataTypes.Plant memory plant = plants[index];
     return (plant.id, plant.state, plant.plantedDate, plant.lat, plant.long, plant.sourceNursery, plant.variety, plant.ownerAddress);
+  }
+
+  function receivePlant(uint index, address ownerAddress, uint date) public {
+    SupplyDataTypes.Plant storage plant = plants[index];
+    plant.state = SupplyDataTypes.State.Received;
+    plant.ownerAddress = ownerAddress;
+
+    emit ReceivedByFarmer(index, ownerAddress, date);
   }
 
   // modifier purchasedByFarmer(uint id) {

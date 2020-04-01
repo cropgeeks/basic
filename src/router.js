@@ -78,6 +78,30 @@ const router = new Router({
       }
     },
     {
+      path: '/farms/:farmId/planted',
+      name: 'farm-planted',
+      component: () => import('./views/FarmPlanted.vue'),
+      meta: {
+        title: 'BASIC - Farm (Planted)',
+      }
+    },
+    {
+      path: '/farms/:farmId/storage',
+      name: 'farm-storage',
+      component: () => import('./views/FarmStored.vue'),
+      meta: {
+        title: 'BASIC - Farm (Stored)',
+      }
+    },
+    {
+      path: '/farms/:farmId/orders',
+      name: 'farm-orders',
+      component: () => import('./views/FarmOrders.vue'),
+      meta: {
+        title: 'BASIC - Farm (Orders)',
+      }
+    },
+    {
       path: '/plants',
       name: 'plants',
       component: () => import('./views/Plants.vue'),
