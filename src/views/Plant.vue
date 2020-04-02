@@ -8,12 +8,22 @@
             <h4>Variety: {{ plant.variety }}</h4>
           </div>
           <div class="row" v-if="propogated !== null">
-            <h4>Propogated by nursery</h4>
-            <b-table :items="propogated"></b-table>
+            <b-table small bordered caption-top caption="Propogated plants" :items="propogated"></b-table>
+          </div>
+          <div class="row" v-if="ordered !== null">
+            <b-table small bordered caption-top caption="Assigned to order" :items="ordered"></b-table>
           </div>
           <div class="row" v-if="purchased !== null">
-            <h4>Purchased by farmer</h4>
-            <b-table :items="purchased"></b-table>
+            <b-table small bordered caption-top caption="Purchased by farmer" :items="purchased"></b-table>
+          </div>
+          <div class="row" v-if="dispatched !== null">
+            <b-table small bordered caption-top caption="Dispatched by nursery" :items="dispatched"></b-table>
+          </div>
+          <div class="row" v-if="stored !== null">
+            <b-table small bordered caption-top caption="Stored by farmer" :items="stored"></b-table>
+          </div>
+          <div class="row" v-if="planted !== null">
+            <b-table small bordered caption-top caption="Planted by farmer" :items="planted"></b-table>
           </div>
         </div>
       </div>
@@ -36,7 +46,12 @@ export default {
       supplyContract: null,
       plant: null,
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
-      propogated: null
+      propogated: null,
+      ordered: null,
+      purchased: null,
+      dispatched: null,
+      stored: null,
+      planted: null
     }
   },
   mounted() {
@@ -74,11 +89,28 @@ export default {
           const returnValues = events[0].returnValues;
           this.propogated = [{
             plant_id: returnValues.plantId,
-            plant_owner: returnValues.plantOwner,
-            nursery: returnValues.nurseryName,
+            plant_owner: returnValues.ownerAddress,
+            nursery: returnValues.name,
             date: new Date(returnValues.date * 1000),
             latitude: returnValues.lat,
             longitude: returnValues.long
+          }]
+        })
+      })
+
+      this.supplyContract.deployed().then((contract) => {
+        contract.getPastEvents('AssignedToOrder', {
+          filter: {plantId: this.$route.params.plantId},
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+        .then((events) => {
+          const returnValues = events[0].returnValues;
+          this.ordered = [{
+            plant_id: returnValues.plantId,
+            order_id: returnValues.orderId,
+            nursery: returnValues.nurseryName,
+            purchasing_farm: returnValues.farmName
           }]
         })
       })
@@ -93,7 +125,7 @@ export default {
           const returnValues = events[0].returnValues;
           this.purchased = [{
             plant_id: returnValues.plantId,
-            plant_owner: returnValues.plantOwner,
+            order_id: returnValues.orderId,
             nursery: returnValues.nurseryName,
             purchasing_farm: returnValues.farmName,
             purchase_date: new Date(returnValues.date * 1000),
@@ -102,6 +134,45 @@ export default {
           }]
         })
       })
+
+      this.supplyContract.deployed().then((contract) => {
+        contract.getPastEvents('DispatchedByNursery', {
+          filter: {plantId: this.$route.params.plantId},
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+        .then((events) => {
+          const returnValues = events[0].returnValues;
+          this.dispatched = [{
+            plant_id: returnValues.plantId,
+            order_id: returnValues.orderId,
+            nursery: returnValues.nurseryName,
+            purchasing_farm: returnValues.farmName,
+            purchase_date: new Date(returnValues.date * 1000),
+            latitude: returnValues.lat,
+            longitude: returnValues.long
+          }]
+        })
+      })
+
+      this.supplyContract.deployed().then((contract) => {
+        contract.getPastEvents('StoredByFarmer', {
+          filter: {plantId: this.$route.params.plantId},
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+        .then((events) => {
+          const returnValues = events[0].returnValues;
+          this.stored = [{
+            plant_id: returnValues.plantId,
+            plant_owner: returnValues.plantOwner,
+            storage_date: new Date(returnValues.date * 1000),
+            store_name: returnValues.storeName,
+            temperature: returnValues.storeTemp,
+          }]
+        })
+      })
+
     })
   },
 }

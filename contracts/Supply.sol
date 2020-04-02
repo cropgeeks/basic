@@ -11,6 +11,7 @@ contract Supply is Ownable {
   SupplyDataTypes.Plant[] public plants;
 
   event PropogatedByNursery(uint indexed plantId, SupplyDataTypes.State state, uint date, int lat, int long, string name, string variety, address indexed ownerAddress);
+  event AssignedToOrder(uint indexed plantId, uint orderId, string nurseryName, string farmName);
   event PurchasedByFarmer(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
   event DispatchedByNursery(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
   event StoredByFarmer(uint indexed plantId, address plantOwner, uint date, string storeName, int storeTemp);
@@ -51,6 +52,7 @@ contract Supply is Ownable {
     SupplyDataTypes.Plant storage plant = plants[plantId];
     plant.state = SupplyDataTypes.State.Shipped;
 
+    emit AssignedToOrder(plantId, orderId, nurseryName, farmName);
     emit PurchasedByFarmer(plantId, orderId, nurseryId, nurseryName, farmId, farmName, dispatchedDate, lat, long);
     emit DispatchedByNursery(plantId, orderId, nurseryId, nurseryName, farmId, farmName, dispatchedDate, lat, long);
   }
