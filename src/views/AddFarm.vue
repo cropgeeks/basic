@@ -102,7 +102,7 @@ export default {
       contract.AddedFarm().on('data', event => {
         let n = {
           id: event.returnValues.farmId,
-          name: event.returnValues.farmName,
+          name: event.returnValues.name,
           lat: event.returnValues.lat,
           long: event.returnValues.long,
           description: event.returnValues.description,
