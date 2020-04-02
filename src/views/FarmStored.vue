@@ -14,11 +14,11 @@
           <b-button v-b-modal.storeModal variant="primary">Add store</b-button>
         </div>
         <div class="row">
-          <b-table class="mb-0" striped hover small bordered caption-top caption="Stored plants" :items="stored" :per-page="perPage" :current-page="currentPage"></b-table>
+          <b-table class="mb-0" striped hover small bordered caption-top caption="Stored plants" :items="plants" :per-page="perPage" :current-page="currentPage"></b-table>
           <b-pagination
-            v-if="stored.length > 0"
+            v-if="plants.length > 0"
             v-model="currentPage"
-            :total-rows="stored.length"
+            :total-rows="plants.length"
             :per-page="perPage"
             size="sm"
           ></b-pagination>
@@ -49,7 +49,7 @@ export default {
     return {
       farm: null,
       plants: [],
-      states: ['Propogated', 'Purchased', 'Dispatched', 'Planted'],
+      states: ['Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       isFarmOwner: false,
       perPage: 10,
       currentPage: 1,
@@ -90,11 +90,6 @@ export default {
       })
     })
   },
-  computed: {
-    stored: function() {
-      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Stored');
-    }
-  },
   methods: {
     initFarm: function(contract) {
       // Retrieve farm info
@@ -125,7 +120,9 @@ export default {
               variety: plant[6].toString(),
               ownerAddress: plant[7].toString()
             }
-            this.plants.push(p);
+            if (p.ownerAddress === this.farm.ownerAddress && p.state === 'Stored') {
+              this.plants.push(p);
+            }
           })
         }
       })
