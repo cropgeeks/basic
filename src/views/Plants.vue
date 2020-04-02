@@ -1,27 +1,19 @@
 <template>
-  <div class="container container-top">
-    <b-container>
-      <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
-      <h1>Plants</h1>
-      <div class="row">
-        <div v-for="plant in plants" v-bind:key="plant.id" class="col-md-3 col-6 my-1">
-          <div class="card h-100">
-          <div class="card-body">
-            <div class="card-title">Id: {{ plant.id }}</div>
-            <div class="card-text">
-              <p>Variety: {{ plant.variety }}</p>
-              <p>State: {{ plant.state }}</p>
-              <p>Owner: {{ plant.address }}</p>
-            </div>
-          </div>
-          <div class="card-footer">
-            <b-button @click="$router.push({ name: 'plant', params: { plantId: plant.id }})" variant="primary">View details</b-button>
-          </div>
-        </div>
-      </div>
+  <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
+    <h1>Plants</h1>
+    <div class="row">
+      <b-table class="mb-0" striped hover small bordered :items="plants" :per-page="perPage" :current-page="currentPage" selectable  @row-clicked="selectRow">
+      </b-table>
+      <b-pagination
+        v-if="plants.length > 0"
+        v-model="currentPage"
+        :total-rows="plants.length"
+        :per-page="perPage"
+        size="sm"
+      ></b-pagination>
     </div>
-    </b-container>
-  </div>
+  </b-container>
 
 </template>
 
@@ -39,6 +31,8 @@ export default {
       supplyContract: null,
       plants: [],
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
+      perPage: 10,
+      currentPage: 1,
       breadcrumbs: [
         {
           text: "Home",
@@ -85,6 +79,9 @@ export default {
       }
 
       this.plants.push(p)
+    },
+    selectRow(plant) {
+      this.$router.push({ name: 'plant', params: { plantId: plant.id }})
     }
   }
 }
