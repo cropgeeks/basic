@@ -8600,12 +8600,12 @@
         }
       },
       "links": {},
-      "address": "0x761EaC931c366AA701ADaB7A74c6Fab2d35dAeF0",
-      "transactionHash": "0xeb740adf998ba8baa8ded6a4e9cca3da76e4dd38d6e081b4194f969a0cf08e26"
+      "address": "0x09cFD5AdF52a190e40e781517594F38FaB7241d7",
+      "transactionHash": "0xbe2e7d4c0899458a66c25afd00deb6d9ccd2adb7f9d7c9ffb0a23627547d4f95"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2020-04-02T12:46:36.444Z",
+  "updatedAt": "2020-04-02T15:42:32.096Z",
   "devdoc": {
     "methods": {
       "isOwner()": {
