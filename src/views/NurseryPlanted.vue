@@ -16,11 +16,11 @@
         </div>
 
         <div class="row">
-          <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
+          <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="plants" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
           <b-pagination
-            v-if="propogated.length > 0"
+            v-if="plants.length > 0"
             v-model="propCurrentPage"
-            :total-rows="propogated.length"
+            :total-rows="plants.length"
             :per-page="propPerPage"
             size="sm"
           ></b-pagination>
@@ -102,11 +102,6 @@ export default {
       })
     })
   },
-  computed: {
-    propogated: function() {
-      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Propogated');
-    }
-  },
   methods: {
     propogatePlants: function() {
       this.supplyContract.deployed().then((contract) => {
@@ -149,7 +144,9 @@ export default {
               variety: plant[6].toString(),
               ownerAddress: plant[7].toString()
             }
-            this.plants.push(p);
+            if (p.nursery === this.nursery.name && p.state === 'Propogated') {
+              this.plants.push(p);
+            }
           })
         }
       })
