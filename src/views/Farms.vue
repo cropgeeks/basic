@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Farms</h1>
     <div class="row">
       <b-card-group deck v-for="farm in farms" v-bind:key="farm.id">
@@ -29,6 +30,16 @@ export default {
   data() {
     return {
       farms: [],
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Farms",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

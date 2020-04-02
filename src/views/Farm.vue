@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Farm</h1>
     <div class="row" v-if="farm !== null">
       <div class="col">
@@ -58,7 +59,21 @@ export default {
       selectedNursery: null,
       orderQuantity: 0,
       orders: [],
-      expanded: false
+      expanded: false,
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Farms",
+          to: { name: 'farms'}
+        },
+        {
+          text: "Farm",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

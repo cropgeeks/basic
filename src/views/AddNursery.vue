@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Add Nursery</h1>
     <div class="row" v-if="isAdmin">
       <div class="col">
@@ -47,7 +48,17 @@ export default {
       nurseryLong: null,
       nurseryDesc: null,
       nurseryOwner: null,
-      owners: []
+      owners: [],
+      breadcrumbs: [
+        {
+          text: "Admin",
+          to: { name: 'admin' }
+        },
+        {
+          text: "Nurseries",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

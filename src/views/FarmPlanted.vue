@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Farm</h1>
     <div class="row" v-if="farm !== null">
       <div class="col">
@@ -63,6 +64,24 @@ export default {
       isFarmOwner: false,
       plantedPerPage: 10,
       plantedCurrentPage: 1,
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Farms",
+          to: { name: 'farms'}
+        },
+        {
+          text: "Farm",
+          to: { name: 'farm', params: { farmId: this.$route.params.farmId }}
+        },
+        {
+          text: "Planted",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

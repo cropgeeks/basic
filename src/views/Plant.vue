@@ -1,6 +1,7 @@
 <template>
   <div class="container container-top">
     <b-container>
+      <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
       <div class="row" v-if="plant !== null">
         <div class="col">
           <h1>Plant Id: {{ plant.id }}</h1>
@@ -51,7 +52,21 @@ export default {
       purchased: null,
       dispatched: null,
       stored: null,
-      planted: null
+      planted: null,
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Plants",
+          to: { name: 'plants' }
+        },
+         {
+          text: "Plant",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

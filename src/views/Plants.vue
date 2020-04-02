@@ -1,6 +1,7 @@
 <template>
   <div class="container container-top">
     <b-container>
+      <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
       <h1>Plants</h1>
       <div class="row">
         <div v-for="plant in plants" v-bind:key="plant.id" class="col-md-3 col-6 my-1">
@@ -37,7 +38,17 @@ export default {
       defaultAccount: null,
       supplyContract: null,
       plants: [],
-      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted']
+      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Plants",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

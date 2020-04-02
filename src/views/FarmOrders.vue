@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Farm</h1>
     <div class="row" v-if="farm !== null">
       <div class="col">
@@ -81,7 +82,25 @@ export default {
       expanded: false,
       selectedOrder: null,
       stores: [],
-      selectedStore: null
+      selectedStore: null,
+      breadcrumbs: [
+        {
+          text: "Home",
+          to: { name: 'home' }
+        },
+        {
+          text: "Farms",
+          to: { name: 'farms'}
+        },
+        {
+          text: "Farm",
+          to: { name: 'farm', params: { farmId: this.$route.params.farmId }}
+        },
+        {
+          text: "Orders",
+          active: true
+        }
+      ]
     }
   },
   mounted() {

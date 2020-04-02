@@ -1,5 +1,6 @@
 <template>
   <b-container class="container-top">
+    <b-breadcrumb :items="breadcrumbs"></b-breadcrumb>
     <h1>Add Account</h1>
     <div class="row" v-if="isAdmin">
       <div class="col">
@@ -44,7 +45,17 @@ export default {
       name: null,
       roles: ["Nursery", "Farmer"],
       nurseryOwners: [],
-      farmOwners: []
+      farmOwners: [],
+      breadcrumbs: [
+        {
+          text: "Admin",
+          to: { name: 'admin' }
+        },
+        {
+          text: "Accounts",
+          active: true
+        }
+      ]
     }
   },
   mounted() {
