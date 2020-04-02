@@ -149,8 +149,4 @@ export default {
 .container-top{
   margin-top: 2%;
 }
-.card-header{
-  background-color: rgba(0, 0, 0, 0.000000001);
-  border-bottom: 0px;
-}
 </style>
