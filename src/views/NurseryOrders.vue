@@ -50,7 +50,7 @@ export default {
       isNurseryOrder: false,
       orders: [],
       plants: [],
-      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
+      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
     }
   },
   mounted() {

@@ -1,7 +1,7 @@
 pragma solidity  > 0.5.0;
 
 library SupplyDataTypes {
-  enum State { Propogated, Purchased, Shipped, Received, Planted, Harvested, Packed }
+  enum State { Propogated, Purchased, Shipped, Stored, Planted, Harvested, Packed }
   enum OrderState { Placed, Dispatched, Received }
   enum Role { Nursery, Farmer, Packhouse }
 

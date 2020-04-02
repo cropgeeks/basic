@@ -45,7 +45,7 @@ export default {
     return {
       nursery: null,
       plants: [],
-      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
+      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       isNurseryOwner: false,
       variety: null,
       propQuantity: null,

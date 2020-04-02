@@ -10,6 +10,10 @@
           <p>{{ farm.description }}</p>
         </div>
         <div class="row">
+          <b-button v-b-modal.plantModal :disabled="plantDisabled" variant="primary">Plant</b-button>
+          <b-button v-b-modal.harvestModal :disabled="harvestDisabled" variant="primary" class="ml-3">Harvest</b-button>
+        </div>
+        <div class="row">
           <b-table class="mb-0" striped hover small bordered caption-top caption="Planted plants" :items="planted" :per-page="plantedPerPage" :current-page="plantedCurrentPage"></b-table>
           <b-pagination
             v-if="planted.length > 0"
@@ -20,6 +24,27 @@
           ></b-pagination>
         </div>
       </div>
+      <b-modal id="plantModal" title="Plant" @ok="plant">
+        <b-form>
+          <!-- <b-form-group label="Variety" label-for="variety" label-align="left">
+            <b-input id="variety" size="sm" v-model="variety"></b-input>
+          </b-form-group>
+          <b-form-group label="Quantity" label-for="quantity" label-align="left">
+            <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" v-model="propQuantity"/>
+          </b-form-group> -->
+        </b-form>
+      </b-modal>
+
+      <b-modal id="harvestModal" title="Plant" @ok="harvest">
+        <b-form>
+          <!-- <b-form-group label="Variety" label-for="variety" label-align="left">
+            <b-input id="variety" size="sm" v-model="variety"></b-input>
+          </b-form-group>
+          <b-form-group label="Quantity" label-for="quantity" label-align="left">
+            <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" v-model="propQuantity"/>
+          </b-form-group> -->
+        </b-form>
+      </b-modal>
     </div>
   </b-container>
 
@@ -34,7 +59,7 @@ export default {
     return {
       farm: null,
       plants: [],
-      states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Stored', 'Planted'],
+      states: ['Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       isFarmOwner: false,
       plantedPerPage: 10,
       plantedCurrentPage: 1,
@@ -54,10 +79,21 @@ export default {
         this.initFarmPlants(contract);
       })
     })
+
+    console.log("plantDisabled: " + this.plantDisabled);
   },
   computed: {
     planted: function() {
       return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Planted');
+    },
+    stored: function() {
+      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Stored');
+    },
+    plantDisabled: function() {
+      return this.stored.length == 0;
+    },
+    harvestDisabled: function() {
+      return this.planted.length == 0;
     }
   },
   methods: {
@@ -71,7 +107,7 @@ export default {
           long: f[3].toNumber(),
           description: f[4].toString(),
           ownerName: f[5].toString(),
-          ownerId: f[6].toString()
+          ownerAddress: f[6].toString()
         }
       })
     },
@@ -94,6 +130,12 @@ export default {
           })
         }
       })
+    },
+    plant: function() {
+
+    },
+    harvest: function() {
+
     }
   }
 }

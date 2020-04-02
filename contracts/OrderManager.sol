@@ -60,7 +60,7 @@ contract OrderManager is Ownable {
     }
   }
 
-  function receiveOrder(uint orderId, uint receivedDate) public {
+  function receiveOrder(uint orderId, uint receivedDate, string memory storeName, int storeTemp) public {
     SupplyDataTypes.Order storage order = orders[orderId];
     order.state = SupplyDataTypes.OrderState.Received;
     order.updated = receivedDate;
@@ -72,7 +72,7 @@ contract OrderManager is Ownable {
     emit OrderReceived(order.orderId, nurseryName, farmName, order.quantity, order.state, order.updated);
 
     for (uint i = 0; i < order.plantIds.length; i++) {
-      supply.receivePlant(order.plantIds[i], farmAddress, order.updated);
+      supply.receivePlant(order.plantIds[i], farmAddress, order.updated, storeName, storeTemp);
     }
   }
 }

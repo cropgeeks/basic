@@ -37,7 +37,7 @@ export default {
       defaultAccount: null,
       supplyContract: null,
       plants: [],
-      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted']
+      states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted']
     }
   },
   mounted() {

@@ -49,7 +49,7 @@ export default {
     return {
       farm: null,
       plants: [],
-      states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Stored', 'Planted'],
+      states: ['Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       orderStates: ['Placed', 'Dispatched', 'Received'],
       isFarmOwner: false,
       plantedPerPage: 10,
@@ -88,7 +88,7 @@ export default {
   },
   computed: {
     received: function() {
-      return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Received');
+      return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Stored');
     },
     planted: function() {
       return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Planted');
@@ -111,7 +111,7 @@ export default {
       return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Placed');
     },
     receivedOrders: function() {
-      return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Received');
+      return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === 'Stored');
     }
   },
   methods: {

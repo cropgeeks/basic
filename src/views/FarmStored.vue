@@ -10,6 +10,9 @@
           <p>{{ farm.description }}</p>
         </div>
         <div class="row">
+          <b-button v-b-modal.storeModal variant="primary">Add store</b-button>
+        </div>
+        <div class="row">
           <b-table class="mb-0" striped hover small bordered caption-top caption="Stored plants" :items="stored" :per-page="perPage" :current-page="currentPage"></b-table>
           <b-pagination
             v-if="stored.length > 0"
@@ -20,6 +23,17 @@
           ></b-pagination>
         </div>
       </div>
+
+      <b-modal id="storeModal" title="Plant" @ok="addStore">
+        <b-form>
+          <b-form-group label="Store name" label-for="name" label-align="left">
+            <b-input id="name" size="sm" v-model="storeName"></b-input>
+          </b-form-group>
+          <b-form-group label="Store temperature" label-for="temperature" label-align="left">
+            <b-input id="temperature" type="number" min="-30" max="30"  size="sm" v-model="storeTemperature"></b-input>
+          </b-form-group>
+        </b-form>
+      </b-modal>
     </div>
   </b-container>
 
@@ -34,10 +48,12 @@ export default {
     return {
       farm: null,
       plants: [],
-      states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Planted'],
+      states: ['Propogated', 'Purchased', 'Dispatched', 'Planted'],
       isFarmOwner: false,
       perPage: 10,
       currentPage: 1,
+      storeTemperature: 5,
+      storeName: ''
     }
   },
   mounted() {
@@ -57,7 +73,7 @@ export default {
   },
   computed: {
     stored: function() {
-      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Received');
+      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Stored');
     }
   },
   methods: {
@@ -94,7 +110,20 @@ export default {
           })
         }
       })
-    }
+    },
+    addStore: function() {
+      this.farmManager.deployed().then((contract) => {
+        contract.addFarmStorage(this.farm.id, this.storeName, this.storeTemperature);
+      }).catch(error => {
+        // TODO: Flag to the user in some useful way
+        console.log(error);
+      }).then(() => {
+        // We want to blank out our form fields whether we succeeded or failed
+        // hence the placement in a then after the catch
+        this.storeTemperature = 5;
+        this.storeName = '';
+      })
+    },
   }
 }
 </script>

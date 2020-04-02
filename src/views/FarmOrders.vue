@@ -35,19 +35,25 @@
     </div>
 
     <div class="row mt-3" v-for="order in displayOrders" v-bind:key="order.id">
-      <!-- <b-card-group v-for="order in displayOrders" v-bind:key="order.id" class="ml-3"> -->
-        <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
-          <template v-slot:header class="m-0">
-            <h6 class="mb-0">Order - {{ order.id }}</h6>
-          </template>
-          <b-card-text class="mb-0">Nursery: {{ order.nurseryName }}</b-card-text>
-          <b-card-text class="mb-0">Farm: {{ order.farmName }}</b-card-text>
-          <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
-          <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
-          <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
-          <b-button v-if="isFarmOwner && orderStates[order.state] === 'Dispatched'" @click="receive_order(order)">Receive Order</b-button>
-        </b-card>
-      <!-- </b-card-group> -->
+      <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
+        <template v-slot:header class="m-0">
+          <h6 class="mb-0">Order - {{ order.id }}</h6>
+        </template>
+        <b-card-text class="mb-0">Nursery: {{ order.nurseryName }}</b-card-text>
+        <b-card-text class="mb-0">Farm: {{ order.farmName }}</b-card-text>
+        <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
+        <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
+        <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
+        <b-button v-if="isFarmOwner && orderStates[order.state] === 'Dispatched'" v-b-modal.storeModal @click="passOrder(order)">Receive &amp; Store Order</b-button>
+      </b-card>
+
+      <b-modal id="storeModal" title="Order plants" @ok="receive_order(order, selectedStore)">
+        <b-form>
+          <b-form-group label="Store" label-for="farm-store" label-align="left">
+            <b-form-select id="farm-store" size="sm" :options="farmStores" v-model="selectedStore"></b-form-select>
+          </b-form-group>
+        </b-form>
+      </b-modal>
     </div>
   </b-container>
 
@@ -62,7 +68,7 @@ export default {
     return {
       farm: null,
       plants: [],
-      states: ['Propogated', 'Purchased', 'Dispatched', 'Received', 'Stored', 'Planted'],
+      states: ['Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       orderStates: ['Placed', 'Dispatched', 'Received'],
       selectedOrderState: 'Placed',
       isFarmOwner: false,
@@ -72,13 +78,17 @@ export default {
       selectedNursery: null,
       orderQuantity: 0,
       orders: [],
-      expanded: false
+      expanded: false,
+      selectedOrder: null,
+      stores: [],
+      selectedStore: null
     }
   },
   mounted() {
     web3.eth.getAccounts().then(() => {
       this.farmManager.deployed().then((contract) => {
         this.initFarm(contract);
+        this.initFarmStores(contract);
 
         contract.isFarmOwner(this.$route.params.farmId).then(isFarmer => {
           this.isFarmOwner = isFarmer;
@@ -102,7 +112,7 @@ export default {
   },
   computed: {
     received: function() {
-      return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Received');
+      return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Stored');
     },
     planted: function() {
       return this.plants.filter(plant => plant.ownerId === this.farm.ownerId && plant.state === 'Planted');
@@ -129,6 +139,13 @@ export default {
     },
     displayOrders: function() {
        return this.orders.filter(order => order.farmName === this.farm.name && this.orderStates[order.state] === this.selectedOrderState);
+    },
+    farmStores: function() {
+      const opts = [];
+      this.stores.forEach((store) => {
+        opts.push({ value: store, text: store.name})
+      })
+      return opts;
     }
   },
   methods: {
@@ -160,6 +177,21 @@ export default {
           description: f[4].toString(),
           ownerName: f[5].toString(),
           ownerId: f[6].toString()
+        }
+      })
+    },
+    initFarmStores: function(contract) {
+      contract.getFarmStorageCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getFarmStorage(i).then((farmStore) => {
+            const store = {
+              id: farmStore[0].toNumber(),
+              farmId: farmStore[1].toNumber(),
+              name: farmStore[2].toString(),
+              temperature: farmStore[3].toNumber()
+            }
+            this.stores.push(store);
+          })
         }
       })
     },
@@ -199,14 +231,17 @@ export default {
         this.orders.push(o);
       });
     },
-    receive_order: function(order) {
+    receive_order: function(order, selectedStore) {
       this.orderManager.deployed().then((contract) => {
         let date = (new Date()).getTime();
         let timestamp = Math.floor(date / 1000);
         
-        contract.receiveOrder(order.id, timestamp);
+        contract.receiveOrder(order.id, timestamp, selectedStore.name, selectedStore.temperature);
       })
     },
+    passOrder: function(order) {
+      this.selectedOrder = order;
+    }
   }
 }
 </script>
