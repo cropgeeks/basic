@@ -1,27 +1,30 @@
 <template>
-  <div class="container container-top">
-    <b-container>
-      <h1>Nurseries</h1>
-      <b-list-group>
-        <b-list-group-item v-for="nursery in nurseries" v-bind:key="nursery.id" class="text-left">
-          <p>Name: {{ nursery.name }}</p>
-          <p>Latitude: {{ nursery.lat }}</p>
-          <p>Longitude: {{ nursery.long }}</p>
-        </b-list-group-item>
-      </b-list-group>
-      <h1>Plant list</h1>
-      <b-list-group>
-        <b-list-group-item v-for="plant in plants" v-bind:key="plant.id" class="text-left">
-          <p>Id: {{ plant.id }}</p>
-          <p>State: {{ states.find(p => p.value === plant.state).text }}</p>
-          <p>Planted date: {{ plant.plantedDate }}</p>
-          <p>Latitude: {{ plant.lat }}</p>
-          <p>Longitude: {{ plant.long }}</p>
-          <p>Nursery: {{ plant.nursery }}</p>
-        </b-list-group-item>
-      </b-list-group>
-    </b-container>
-  </div>
+  <b-container class="container-top">
+    <h1>Home</h1>
+    <b-card-group deck class="mt-3">
+      <b-card
+        title="Nursery"
+        img-src="~@/assets/plantnursery.jpg"
+        img-alt="plant nursery"
+      >
+        <b-button to="nurseries" varaint="primary">Nurseries</b-button>
+      </b-card>
+      <b-card
+        title="Farm"
+        img-src="~@/assets/raspberries-small.jpg"
+        img-alt="farm"
+      >
+        <b-button to="farms" varaint="primary">Farms</b-button>
+      </b-card>
+      <b-card
+        title="Plants"
+        img-src="~@/assets/raspberry-plant.jpg"
+        img-alt="plants"
+      >
+        <b-button to="plants" varaint="primary">Plants</b-button>
+      </b-card>
+    </b-card-group>
+  </b-container>
 
 </template>
 
