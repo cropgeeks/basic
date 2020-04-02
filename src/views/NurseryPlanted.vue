@@ -10,6 +10,11 @@
         <div class="row">
           <p>{{ nursery.description }}</p>
         </div>
+
+        <div class="row">
+          <b-button v-if="isNurseryOwner" v-b-modal.propogateModal class="float-left" variant="primary">Propogate plants</b-button>
+        </div>
+
         <div class="row">
           <b-table class="mb-0" striped hover small bordered caption-top caption="Propogated plants" :items="propogated" :per-page="propPerPage" :current-page="propCurrentPage"></b-table>
           <b-pagination
@@ -20,7 +25,7 @@
             size="sm"
           ></b-pagination>
         </div>
-        <b-button v-if="isNurseryOwner" v-b-modal.propogateModal class="float-left" variant="primary">Propogate plants</b-button>
+
         <b-modal id="propogateModal" title="Propogate plants" @ok="propogatePlants">
           <b-form>
             <b-form-group label="Variety" label-for="variety" label-align="left">
@@ -161,8 +166,8 @@ export default {
           variety: event.returnValues.variety,
           ownerAddress: event.returnValues.ownerAddress
         }
-        if (p.ownerId === this.nursery.ownerId) {
-          this.propogated.push(p);
+        if (p.nursery === this.nursery.name) {
+          this.plants.push(p);
         }
       })
     }
