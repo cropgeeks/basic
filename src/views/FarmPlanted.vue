@@ -59,7 +59,8 @@ export default {
   data() {
     return {
       farm: null,
-      plants: [],
+      planted: [],
+      storedPlants: [],
       states: ['Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       isFarmOwner: false,
       plantedPerPage: 10,
@@ -98,16 +99,8 @@ export default {
         this.initFarmPlants(contract);
       })
     })
-
-    console.log("plantDisabled: " + this.plantDisabled);
   },
   computed: {
-    planted: function() {
-      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Planted');
-    },
-    stored: function() {
-      return this.plants.filter(plant => plant.ownerAddress === this.farm.ownerAddress && plant.state === 'Stored');
-    },
     plantDisabled: function() {
       return this.stored.length == 0;
     },
@@ -145,7 +138,11 @@ export default {
               variety: plant[6].toString(),
               ownerAddress: plant[7].toString()
             }
-            this.plants.push(p);
+            if (p.ownerAddress === this.farm.ownerAddress && p.state === 'Planted') {
+              this.planted.push(p);
+            } else if (p.ownerAddress === this.farm.ownerAddress && p.state === 'Stored') {
+              this.storedPlants.push(p);
+            }
           })
         }
       })

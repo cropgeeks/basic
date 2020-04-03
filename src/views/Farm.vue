@@ -33,6 +33,13 @@
             >
               <b-button @click="$router.push({ name: 'farm-storage', params: { farmId: farm.id }})" varaint="primary">View store</b-button>
             </b-card>
+            <b-card
+              title="Employees"
+              img-src="~@/assets/role-icon.png"
+              img-alt="employees"
+            >
+              <b-button @click="$router.push({ name: 'farm-employees', params: { farmId: farm.id }})" varaint="primary">View employees</b-button>
+            </b-card>
           </b-card-group>
         </div>
       </div>

@@ -16,14 +16,22 @@ contract FarmManager is Ownable {
     int temperature;
   }
 
+  struct Employee {
+    uint id;
+    uint farmId;
+    string name;
+  }
+
   SupplyDataTypes.Farm[] public farms;
   SupplyDataTypes.Owner[] public farmOwnerList;
   FarmStorage[] public stores;
+  Employee[] public employees;
   mapping(address => SupplyDataTypes.Owner) public ownersByAddress;
 
   event AddedFarm(uint farmId, string name, int lat, int long, string description, string ownerName, address ownerAddress);
   event AddedFarmOwner(string name, address farmOwner);
   event AddedStore(uint storeId, uint farmId, string name, int temperature);
+  event AddedEmployee(uint employeeId, uint farmId, string name);
 
   constructor() public {
   }
@@ -89,5 +97,20 @@ contract FarmManager is Ownable {
   function getFarmStorage(uint index) public view returns(uint, uint, string memory, int) {
     FarmStorage memory store = stores[index];
     return (store.id, store.farmId, store.name, store.temperature);
+  }
+
+  function addEmployee(uint farmId, string memory name) public {
+    Employee memory employee = Employee(employees.length, farmId, name);
+    employees.push(employee);
+    emit AddedEmployee(employee.id, employee.farmId, employee.name);
+  }
+
+  function getEmployeeCount() public view returns(uint) {
+    return employees.length;
+  }
+
+  function getEmployee(uint index) public view returns(uint, uint, string memory) {
+    Employee memory employee = employees[index];
+    return (employee.id, employee.farmId, employee.name);
   }
 }

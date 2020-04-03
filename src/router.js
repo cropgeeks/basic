@@ -118,6 +118,14 @@ const router = new Router({
       }
     },
     {
+      path: '/farms/:farmId/employees',
+      name: 'farm-employees',
+      component: () => import('./views/FarmEmployees.vue'),
+      meta: {
+        title: 'BASIC - Farm (Employees)',
+      }
+    },
+    {
       path: '/plants',
       name: 'plants',
       component: () => import('./views/Plants.vue'),
