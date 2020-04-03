@@ -8600,12 +8600,18 @@
         }
       },
       "links": {},
-      "address": "0x09cFD5AdF52a190e40e781517594F38FaB7241d7",
-      "transactionHash": "0xbe2e7d4c0899458a66c25afd00deb6d9ccd2adb7f9d7c9ffb0a23627547d4f95"
+      "address": "0xF70e80209E3eBf954D1AF15056DdBf7493Ab9BbB",
+      "transactionHash": "0xb305103a8f557ac6d016ba83e33efef34aa0078d3720e661208d0e4c57edc821"
+    },
+    "1585887756951": {
+      "events": {},
+      "links": {},
+      "address": "0xC024638f07c1adD4ED6a0Ba986E072cAD7b952EB",
+      "transactionHash": "0x61eaf003a4138e962257b9c4fcf6674709df28d4e3ef1c71f135b2fb54596bf2"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2020-04-02T15:42:32.096Z",
+  "updatedAt": "2020-04-03T05:51:44.170Z",
   "devdoc": {
     "methods": {
       "isOwner()": {

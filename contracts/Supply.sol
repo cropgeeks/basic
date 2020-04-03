@@ -24,22 +24,6 @@ contract Supply is Ownable {
     // addFarm(0, "Invergowrie", 56, 3, 0xdacF2A85BEbdD88e49DF032A61b5d7679eafb25E);
   }
 
-  // function getOwnerCount() public view returns(uint) {
-  //   return ownerList.length;
-  // }
-
-  // function getOwner(uint index) public view returns(uint, string memory, address, SupplyDataTypes.Role) {
-  //   SupplyDataTypes.Owner memory owner = ownerList[index];
-  //   return (owner.id, owner.name, owner.ownerAddress, owner.role);
-  // }
-
-  // function addFarmOwner(string memory name, address farmOwner) public onlyOwner {
-  //   farmers.add(farmOwner);
-  //   SupplyDataTypes.Owner memory owner = SupplyDataTypes.Owner(ownerList.length, name, farmOwner);
-  //   ownerList.push(owner);
-  //   farmManager.addFarmOwner(owner);
-  // }
-
   function propogatePlants(uint date, string memory variety, int quantity, string memory nurseryName, int lat, int long, address ownerAddress) public {
     uint plantId = plants.length;
     for (int i = 0; i < quantity; i++){

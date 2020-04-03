@@ -20,7 +20,8 @@
       </div>
     </div>
 
-    <div class="row mt-3" v-for="order in displayOrders" v-bind:key="order.id">
+        <div v-if="orderStatePlaced">
+      <div class="row mt-3" v-for="order in placedOrders" v-bind:key="order.id">
         <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
           <template v-slot:header class="m-0">
             <h6 class="mb-0">Order - {{ order.id }}</h6>
@@ -30,9 +31,39 @@
           <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
           <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
           <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
-          <b-button v-if="isNurseryOwner && orderStates[order.state] === 'Placed'" @click="dispatch_order(order)">Dispatch Order</b-button>
+          <b-button v-if="isNurseryOwner" @click="dispatch_order(order)">Dispatch Order</b-button>
         </b-card>
-      <!-- </b-card-group> -->
+      </div>
+    </div>
+
+    <div v-if="orderStateDispatched">
+      <div class="row mt-3" v-for="order in dispatchedOrders" v-bind:key="order.id">
+        <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
+          <template v-slot:header class="m-0">
+            <h6 class="mb-0">Order - {{ order.id }}</h6>
+          </template>
+          <b-card-text class="mb-0">Nursery: {{ order.nurseryName }}</b-card-text>
+          <b-card-text class="mb-0">Farm: {{ order.farmName }}</b-card-text>
+          <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
+          <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
+          <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
+        </b-card>
+      </div>
+    </div>
+
+    <div v-if="orderStateReceived">
+      <div class="row mt-3" v-for="order in receivedOrders" v-bind:key="order.id">
+        <b-card header-text-variant="light" header-bg-variant="dark" class="text-left w-100">
+          <template v-slot:header class="m-0">
+            <h6 class="mb-0">Order - {{ order.id }}</h6>
+          </template>
+          <b-card-text class="mb-0">Nursery: {{ order.nurseryName }}</b-card-text>
+          <b-card-text class="mb-0">Farm: {{ order.farmName }}</b-card-text>
+          <b-card-text class="mb-0">Quantity: {{ order.quantity }}</b-card-text>
+          <b-card-text class="mb-0">State: {{ orderStates[order.state] }}</b-card-text>
+          <b-card-text class="mb-0">Last updated: {{ order.lastUpdated.toLocaleString() }}</b-card-text>
+        </b-card>
+      </div>
     </div>
   </b-container>
 
@@ -49,7 +80,9 @@ export default {
       orderStates: ['Placed', 'Dispatched', 'Received'],
       selectedOrderState: 'Placed',
       isNurseryOrder: false,
-      orders: [],
+      placedOrders: [],
+      dispatchedOrders: [],
+      receivedOrders: [],
       plants: [],
       states: [ 'Propogated', 'Purchased', 'Dispatched', 'Stored', 'Planted'],
       breadcrumbs: [
@@ -84,7 +117,7 @@ export default {
       })
 
       this.orderManager.deployed().then((contract) => {
-        this.orders = this.getOrders(contract);
+        this.initNurseryOrders(contract);
         this.setupOrderDispatchedEvent(contract);
       })
 
@@ -94,12 +127,15 @@ export default {
     })
   },
   computed: {
-    displayOrders: function() {
-       return this.orders.filter(order => order.nurseryName === this.nursery.name && this.orderStates[order.state] === this.selectedOrderState);
+    orderStatePlaced: function() {
+      return this.selectedOrderState === 'Placed';
     },
-    propogated: function() {
-      return this.plants.filter(plant => plant.nursery === this.nursery.name && plant.state === 'Propogated');
-    }
+    orderStateDispatched: function() {
+      return this.selectedOrderState === 'Dispatched';
+    },
+    orderStateReceived: function() {
+      return this.selectedOrderState === 'Received';
+    },
   },
   methods: {
     initNursery: function(contract) {
@@ -131,19 +167,49 @@ export default {
               variety: plant[6].toString(),
               ownerAddress: plant[7].toString()
             }
-            this.plants.push(p);
+            if (p.nursery === this.nursery.name && p.state === 'Propogated') {
+              this.plants.push(p);
+            }
+          })
+        }
+      })
+    },
+    initNurseryOrders: function(contract) {
+      contract.getOrderCount().then((count) => {
+        for (var i = 0; i < count; i++) {
+          contract.getOrder(i).then((order) => {
+            let o = {
+              id: order[0].toNumber(),
+              nurseryName: order[1].toString(),
+              farmName: order[2].toString(),
+              quantity: order[3].toNumber(),
+              state: order[4].toNumber(),
+              lastUpdated: new Date(order[5].toNumber() * 1000)
+            }
+            if (o.nurseryName === this.nursery.name) {
+              if (this.orderStates[o.state] === 'Placed') {
+                this.placedOrders.push(o);
+              } else if (this.orderStates[o.state] === 'Dispatched') {
+                this.dispatchedOrders.push(o);
+              } else if (this.orderStates[o.state] === 'Received') {
+                this.receivedOrders.push(o);
+              }
+            }
           })
         }
       })
     },
     dispatch_order: function(order) {
       this.orderManager.deployed().then((contract) => {
-        const ordered = this.propogated.slice(0, order.quantity).map(p => p.id);
+        const ordered = this.plants.slice(0, order.quantity).map(p => p.id);
 
         let date = (new Date()).getTime();
         let timestamp = Math.floor(date / 1000);
 
-        contract.dispatchOrder(order.id, ordered, timestamp, order.farmName, this.nursery.name, this.nursery.lat, this.nursery.long);
+        contract.dispatchOrder(order.id, ordered, timestamp, order.farmName, this.nursery.name, this.nursery.lat, this.nursery.long)
+          .then(() => {
+            this.placedOrders = this.placedOrders.filter(o => o.id !== order.id);
+          })
       })
     },
      // Setup the event listener which checks for the addition of new farms
@@ -154,11 +220,11 @@ export default {
           nurseryName: event.returnValues.nurseryName, 
           farmName: event.returnValues.farmName, 
           quantity: event.returnValues.quantity, 
-          state: this.orderStates[event.returnValues.state], 
-          lastUpdated: new Date(event.returnValues.placedDate * 1000)
+          state: event.returnValues.state, 
+          lastUpdated: new Date(event.returnValues.dispatchedDate * 1000)
         }
 
-        this.orders.push(o);
+        this.dispatchedOrders.push(o);
       });
     }
   }

@@ -32,7 +32,7 @@
               <b-input id="variety" size="sm" v-model="variety"></b-input>
             </b-form-group>
             <b-form-group label="Quantity" label-for="quantity" label-align="left">
-              <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" v-model="propQuantity"/>
+              <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" max="20" v-model="propQuantity"/>
             </b-form-group>
           </b-form>
         </b-modal>

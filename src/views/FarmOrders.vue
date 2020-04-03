@@ -151,6 +151,7 @@ export default {
       this.orderManager.deployed().then((contract) => {
         this.initFarmOrders(contract);
         this.setupOrderPlacedEvent(contract);
+        this.setupOrderReceivedEvent(contract);
       })
 
       this.supplyContract.deployed().then((contract) => {
@@ -291,11 +292,26 @@ export default {
           nurseryName: event.returnValues.nurseryName, 
           farmName: event.returnValues.farmName, 
           quantity: event.returnValues.quantity, 
-          state: this.orderStates[event.returnValues.state], 
+          state: event.returnValues.state, 
           lastUpdated: new Date(event.returnValues.placedDate * 1000)
         }
 
         this.placedOrders.push(o);
+      });
+    },
+    setupOrderReceivedEvent: function(contract) {
+      // uint orderId, string nurseryName, string farmName, uint plantIds, OrderState state, uint placedDate
+      contract.OrderReceived().on('data', event => {
+        let o = {
+          id: event.returnValues.orderId, 
+          nurseryName: event.returnValues.nurseryName, 
+          farmName: event.returnValues.farmName, 
+          quantity: event.returnValues.quantity, 
+          state: event.returnValues.state, 
+          lastUpdated: new Date(event.returnValues.receivedDate * 1000)
+        }
+
+        this.receivedOrders.push(o);
       });
     },
     receive_order: function(order, selectedStore) {

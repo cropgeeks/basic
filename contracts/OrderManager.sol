@@ -13,9 +13,9 @@ contract OrderManager is Ownable {
 
   SupplyDataTypes.Order[] public orders;
 
-  event OrderPlaced(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint placedDate);
-  event OrderDispatched(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint dispatchedDate);
-  event OrderReceived(uint orderId, string nurseryName, string farmName, uint plantIds, SupplyDataTypes.OrderState state, uint receivedDate);
+  event OrderPlaced(uint orderId, string nurseryName, string farmName, uint quantity, SupplyDataTypes.OrderState state, uint placedDate);
+  event OrderDispatched(uint orderId, string nurseryName, string farmName, uint quantity, SupplyDataTypes.OrderState state, uint dispatchedDate);
+  event OrderReceived(uint orderId, string nurseryName, string farmName, uint quantity, SupplyDataTypes.OrderState state, uint receivedDate);
 
   constructor(address nurseryManagerAddress, address farmManagerAddress, address supplyAddress) public {
     nurseryManager = NurseryManager(nurseryManagerAddress);

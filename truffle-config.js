@@ -46,6 +46,12 @@ module.exports = {
      host: "localhost",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "*",       // Any network (default: none)
+    },
+
+    minke: {
+      host: "minke.hutton.ac.uk",
+      port: 8545,
+      network_id: "1585887756951"
     }
 
     // Another network with more advanced options...
