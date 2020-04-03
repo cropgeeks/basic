@@ -9,7 +9,7 @@ module.exports = function(deployer) {
   deployer.deploy(Supply).then(() => Supply.deployed())
     .then(() => deployer.deploy(NurseryManager))
     .then(() => NurseryManager.deployed())
-    .then(() => deployer.deploy(FarmManager))
+    .then(() => deployer.deploy(FarmManager, Supply.address))
     .then(() => FarmManager.deployed())
     .then(() => deployer.deploy(OrderManager, NurseryManager.address, FarmManager.address, Supply.address));
 };

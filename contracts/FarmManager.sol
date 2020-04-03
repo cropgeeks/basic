@@ -3,8 +3,11 @@ pragma solidity  > 0.5.0;
 import "../node_modules/openzeppelin-solidity/contracts/access/Roles.sol";
 import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./SupplyDataTypes.sol";
+import "./Supply.sol";
 
 contract FarmManager is Ownable {
+  Supply supply;
+
   using Roles for Roles.Role;
 
   Roles.Role private farmOwners;
@@ -33,7 +36,8 @@ contract FarmManager is Ownable {
   event AddedStore(uint storeId, uint farmId, string name, int temperature);
   event AddedEmployee(uint employeeId, uint farmId, string name);
 
-  constructor() public {
+  constructor(address supplyAddress) public {
+    supply = Supply(supplyAddress);
   }
 
   function addFarmOwner(string memory name, address farmOwner) public onlyOwner {
@@ -112,5 +116,12 @@ contract FarmManager is Ownable {
   function getEmployee(uint index) public view returns(uint, uint, string memory) {
     Employee memory employee = employees[index];
     return (employee.id, employee.farmId, employee.name);
+  }
+
+  function plantOnFarm(uint farmId, uint employeeId, uint plantId, uint date) public {
+    Employee memory employee = employees[employeeId];
+    SupplyDataTypes.Farm memory farm = farms[farmId];
+
+    supply.plantOnFarm(plantId, farm.name, farm.ownerAddress, farm.lat, farm.long, employee.name, date);
   }
 }

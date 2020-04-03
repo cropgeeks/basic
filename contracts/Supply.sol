@@ -15,7 +15,7 @@ contract Supply is Ownable {
   event PurchasedByFarmer(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
   event DispatchedByNursery(uint indexed plantId, uint orderId, uint nurseryId, string nurseryName, uint farmId, string farmName, uint date, int lat, int long);
   event StoredByFarmer(uint indexed plantId, address plantOwner, uint date, string storeName, int storeTemp);
-  event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date);
+  event PlantedByFarmer(uint indexed plantId, address plantOwner, uint date, string farmName, string employeeName);
 
   constructor() public {
     // addNurseryOwner(0x21111104e6933e6fb2bB4dc99AB5B65439226043);
@@ -62,6 +62,15 @@ contract Supply is Ownable {
     plant.ownerAddress = ownerAddress;
 
     emit StoredByFarmer(index, ownerAddress, date, storeName, storeTemp);
+  }
+
+  function plantOnFarm(uint plantId, string memory farmName, address ownerAddress, int lat, int long, string memory employeeName, uint date) public {
+    SupplyDataTypes.Plant storage plant = plants[plantId];
+    plant.state = SupplyDataTypes.State.Planted;
+    plant.lat = lat;
+    plant.long = long;
+
+    emit PlantedByFarmer(plantId, ownerAddress, date, farmName, employeeName);
   }
 
   // modifier purchasedByFarmer(uint id) {

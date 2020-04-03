@@ -188,6 +188,24 @@ export default {
         })
       })
 
+      this.supplyContract.deployed().then((contract) => {
+        contract.getPastEvents('PlantedByFarmer', {
+          filter: {plantId: this.$route.params.plantId},
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+        .then((events) => {
+          const returnValues = events[0].returnValues;
+          this.planted = [{
+            plant_id: returnValues.plantId,
+            plant_owner: returnValues.plantOwner,
+            storage_date: new Date(returnValues.date * 1000),
+            farm_name: returnValues.farmName,
+            employee: returnValues.employeeName,
+          }]
+        })
+      })
+
     })
   },
 }

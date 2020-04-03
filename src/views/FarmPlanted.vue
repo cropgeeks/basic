@@ -27,12 +27,12 @@
       </div>
       <b-modal id="plantModal" title="Plant" @ok="plant">
         <b-form>
-          <!-- <b-form-group label="Variety" label-for="variety" label-align="left">
-            <b-input id="variety" size="sm" v-model="variety"></b-input>
+          <b-form-group label="Employeed ID" label-for="employee" label-align="left">
+            <b-input id="employee" size="sm" v-model="employeeId"></b-input>
           </b-form-group>
-          <b-form-group label="Quantity" label-for="quantity" label-align="left">
-            <b-input id="quantity" size="sm" placeholder="1" type="number" min="1" v-model="propQuantity"/>
-          </b-form-group> -->
+          <b-form-group label="Select plant" label-for="plant" label-align="left">
+            <b-form-select id="plant" size="sm" :options="options" v-model="toBePlanted"></b-form-select>
+          </b-form-group>
         </b-form>
       </b-modal>
 
@@ -65,6 +65,8 @@ export default {
       isFarmOwner: false,
       plantedPerPage: 10,
       plantedCurrentPage: 1,
+      employeeId: null,
+      toBePlanted: null,
       breadcrumbs: [
         {
           text: "Home",
@@ -102,10 +104,17 @@ export default {
   },
   computed: {
     plantDisabled: function() {
-      return this.stored.length == 0;
+      return this.storedPlants.length == 0;
     },
     harvestDisabled: function() {
       return this.planted.length == 0;
+    },
+    options: function() {
+      const opts = [];
+      this.storedPlants.forEach((plant) => {
+        opts.push({ value: plant, text: plant.id})
+      })
+      return opts;
     }
   },
   methods: {
@@ -148,10 +157,36 @@ export default {
       })
     },
     plant: function() {
+      this.farmManager.deployed().then((contract) => {
+        let date = (new Date()).getTime();
+        let timestamp = Math.floor(date / 1000);
 
+        contract.plantOnFarm(this.farm.id, this.employeeId, this.toBePlanted.id, timestamp);
+      }).catch(error => {
+        console.log(error);
+      }).then(() => {
+        this.employeeId = null;
+        this.toBePlanted = null;
+      })
     },
     harvest: function() {
 
+    },
+    setupPlantedByFarmerEvent: function(contract) {
+      // (uint indexed plantId, address plantOwner, uint date, string farmName, string employeeName);
+      contract.PlantedByFarmer().on('data', event => {
+        let e = {
+          plantId: event.returnValues.plantId,
+          address: event.returnValues.plantOwner,
+          date: event.returnValues.date,
+          farmName: event.returnValues.farmName,
+          employeeName: event.returnValues.employeeName
+        }
+        if (e.farmName === this.farm.name) {
+          this.planted.push(this.storedPlants.filter(p => p.id === e.plantId));
+          this.storedPlants = this.storedPlants.filter(p => p.id !== e.plantId);
+        }
+      })
     }
   }
 }
